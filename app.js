@@ -463,18 +463,31 @@ function publicAssetUrl(path) {
   return `/${String(path).replace(/^\/+/, "")}`;
 }
 
-/** @returns {boolean} true if a tab was opened */
-function openAssetInNewTab(asset) {
+/** In-app full preview (same chrome as the app). @returns {boolean} */
+function openDesignPreview(asset) {
+  const shell = document.getElementById("design-preview");
+  const img = document.getElementById("design-preview-img");
+  const titleEl = document.getElementById("design-preview-title");
+  if (!shell || !img || !titleEl) return false;
   const path = asset?.thumbnail;
   if (!path) return false;
-  try {
-    const rel = publicAssetUrl(path);
-    const url = new URL(rel, window.location.origin).href;
-    const w = window.open(url, "_blank", "noopener,noreferrer");
-    return Boolean(w);
-  } catch {
-    return false;
+  titleEl.textContent = asset.name || asset.id || "Design";
+  img.src = publicAssetUrl(path);
+  img.alt = asset.name || "";
+  shell.hidden = false;
+  document.body.style.overflow = "hidden";
+  return true;
+}
+
+function closeDesignPreview() {
+  const shell = document.getElementById("design-preview");
+  const img = document.getElementById("design-preview-img");
+  if (img) {
+    img.removeAttribute("src");
+    img.alt = "";
   }
+  if (shell) shell.hidden = true;
+  document.body.style.overflow = "";
 }
 
 /**
@@ -968,7 +981,7 @@ function openMatchActionModal(action, asset) {
 
   if (action === "collab") {
     matchModalTitle.textContent = "Collaborate";
-    matchModalDesc.innerHTML = `${ownerStrong} is notified when you join this file. The workspace asset opens in a new tab so you can review and collaborate in context.`;
+    matchModalDesc.innerHTML = `${ownerStrong} is notified when you join this file. The design opens in a full preview here so you can review in context.`;
     if (asset?.thumbnail && previewImg && previewWrap) {
       previewImg.src = publicAssetUrl(asset.thumbnail);
       previewImg.alt = safe(name);
@@ -976,11 +989,11 @@ function openMatchActionModal(action, asset) {
     }
     if (primaryBtn) {
       primaryBtn.hidden = false;
-      primaryBtn.textContent = "Notify owner & open asset";
+      primaryBtn.textContent = "Notify owner & view design";
     }
   } else if (action === "duplicate") {
     matchModalTitle.textContent = "Starting point";
-    matchModalDesc.innerHTML = `${ownerStrong} is notified when copies are created from this design. Open the asset to confirm layout before your fork.`;
+    matchModalDesc.innerHTML = `${ownerStrong} is notified when copies are created from this design. The preview opens here so you can confirm layout before your fork.`;
     if (asset?.thumbnail && previewImg && previewWrap) {
       previewImg.src = publicAssetUrl(asset.thumbnail);
       previewImg.alt = safe(name);
@@ -988,7 +1001,7 @@ function openMatchActionModal(action, asset) {
     }
     if (primaryBtn) {
       primaryBtn.hidden = false;
-      primaryBtn.textContent = "Notify owner & open source";
+      primaryBtn.textContent = "Notify owner & view source";
     }
   } else {
     matchModalTitle.textContent = "New design";
@@ -1009,18 +1022,41 @@ document.getElementById("match-modal-primary")?.addEventListener("click", () => 
   const hasFile = Boolean(asset.thumbnail);
   if (action === "collab") {
     recordCollabActivity("collab", asset);
-    const opened = hasFile ? openAssetInNewTab(asset) : false;
+    closeMatchModal();
     if (!hasFile) showToast(`Notified ${ownerDisp} · no preview file on this asset`);
-    else if (!opened) showToast(`Notified ${ownerDisp} · allow pop-ups to open “${label}”`);
-    else showToast(`Notified ${ownerDisp} · opened “${label}”`);
-  } else if (action === "duplicate") {
-    recordCollabActivity("fork", asset);
-    const opened = hasFile ? openAssetInNewTab(asset) : false;
-    if (!hasFile) showToast(`Notified ${ownerDisp} · fork logged (no preview file)`);
-    else if (!opened) showToast(`Notified ${ownerDisp} · allow pop-ups to view source`);
-    else showToast(`Notified ${ownerDisp} · starting point · “${label}”`);
+    else {
+      const opened = openDesignPreview(asset);
+      showToast(
+        opened
+          ? `Notified ${ownerDisp} · viewing “${label}”`
+          : `Notified ${ownerDisp} · preview unavailable`,
+      );
+    }
+    return;
   }
-  closeMatchModal();
+  if (action === "duplicate") {
+    recordCollabActivity("fork", asset);
+    closeMatchModal();
+    if (!hasFile) showToast(`Notified ${ownerDisp} · fork logged (no preview file)`);
+    else {
+      const opened = openDesignPreview(asset);
+      showToast(
+        opened
+          ? `Notified ${ownerDisp} · source · “${label}”`
+          : `Notified ${ownerDisp} · preview unavailable`,
+      );
+    }
+  }
+});
+
+document.getElementById("design-preview-close")?.addEventListener("click", closeDesignPreview);
+document.querySelector("[data-close-design-preview]")?.addEventListener("click", closeDesignPreview);
+
+document.querySelectorAll(".nav-collab-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".nav-collab-btn").forEach((b) => b.classList.remove("is-active"));
+    btn.classList.add("is-active");
+  });
 });
 
 function handleMatchListActionClick(e) {
@@ -1042,6 +1078,11 @@ matchModal?.querySelector("[data-close-match-modal]")?.addEventListener("click",
 
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
+  const dp = document.getElementById("design-preview");
+  if (dp && !dp.hidden) {
+    closeDesignPreview();
+    return;
+  }
   const sma = document.getElementById("smart-match-alert");
   if (sma && !sma.hidden) {
     closeSmartMatchAlert();

@@ -40,6 +40,13 @@
         </button>
       </div>
       <div class="nav-footer">
+        <p class="nav-collab-heading" id="nav-collab-heading">Roles</p>
+        <div class="nav-collab-grid" role="group" aria-labelledby="nav-collab-heading">
+          <button type="button" class="nav-collab-btn is-active" data-collab-role="design" title="Designer">Ds</button>
+          <button type="button" class="nav-collab-btn" data-collab-role="review" title="Reviewer">Rv</button>
+          <button type="button" class="nav-collab-btn" data-collab-role="copy" title="Copywriter">Cp</button>
+          <button type="button" class="nav-collab-btn" data-collab-role="marketing" title="Marketing">Mk</button>
+        </div>
         <span class="nav-avatar" aria-hidden="true">JJ</span>
       </div>
     </nav>
@@ -234,6 +241,22 @@
       <div class="smart-match-alert__actions">
         <button type="button" class="btn btn-primary" id="sma-collab">Collaborate</button>
         <button type="button" class="btn btn-outline" id="sma-dismiss">Not now</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="design-preview" class="design-preview" hidden>
+    <div class="design-preview__backdrop" data-close-design-preview tabindex="-1"></div>
+    <div
+      class="design-preview__dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="design-preview-title"
+    >
+      <button type="button" class="design-preview__close" id="design-preview-close" aria-label="Close preview">×</button>
+      <h2 id="design-preview-title" class="design-preview__title"></h2>
+      <div class="design-preview__frame">
+        <img id="design-preview-img" class="design-preview__img" alt="" />
       </div>
     </div>
   </div>
