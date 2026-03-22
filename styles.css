@@ -868,6 +868,13 @@ body {
   margin-bottom: 12px;
 }
 
+.templates-browse-empty {
+  margin: 16px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
 .templates-browse-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));

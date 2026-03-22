@@ -357,16 +357,55 @@ function syncRecentsCatPillUi() {
 }
 
 function applyRecentsFilters() {
-  renderAssets(getRecentsFilteredItems());
+  if (currentHomeTab !== "templates") {
+    renderAssets(getRecentsFilteredItems());
+  }
+  renderTemplatesBrowsePanel();
+}
+
+/**
+ * Template-library rows, filtered by title search + category when the Templates tab is active.
+ */
+function getTemplatesGridItems() {
+  const allTemplates = workspaceCacheItems.filter((a) => String(a.status || "").toLowerCase().includes("template"));
+  if (currentHomeTab !== "templates") {
+    return allTemplates;
+  }
+  const searchEl = globalSearch ?? document.getElementById("global-search");
+  const raw = searchEl ? String(searchEl.value).trim().toLowerCase() : "";
+  let items = allTemplates;
+  if (raw) {
+    items = items.filter((a) => String(a.name || a.title || "").toLowerCase().includes(raw));
+  }
+  if (recentsActiveCategory) {
+    items = items.filter((a) => recentsCategoryMatch(a, recentsActiveCategory));
+  }
+  return items;
 }
 
 /** Template-library rows only — thumbnails for the Templates tab. */
 function renderTemplatesBrowsePanel() {
   const grid = document.getElementById("templates-browse-grid");
+  const emptyEl = document.getElementById("templates-browse-empty");
   if (!grid) return;
-  const templates = workspaceCacheItems.filter((a) => String(a.status || "").toLowerCase().includes("template"));
+
+  const allTemplates = workspaceCacheItems.filter((a) => String(a.status || "").toLowerCase().includes("template"));
+  const items = getTemplatesGridItems();
+
   grid.replaceChildren();
-  templates.forEach((a) => {
+
+  if (emptyEl) {
+    if (currentHomeTab === "templates" && items.length === 0) {
+      emptyEl.hidden = false;
+      emptyEl.textContent =
+        allTemplates.length === 0 ? "No templates in this workspace." : "No templates match your title filter or category.";
+    } else {
+      emptyEl.hidden = true;
+      emptyEl.textContent = "";
+    }
+  }
+
+  items.forEach((a) => {
     const art = document.createElement("article");
     art.className = "templates-browse-card";
     const name = escapeHtml(a.name || a.id || "Untitled");
@@ -563,11 +602,9 @@ async function loadWorkspaceList() {
     const items = await r.json();
     workspaceCacheItems = items;
     applyRecentsFilters();
-    renderTemplatesBrowsePanel();
   } catch {
     workspaceCacheItems = [];
     applyRecentsFilters();
-    renderTemplatesBrowsePanel();
   }
 }
 
@@ -709,14 +746,10 @@ function setHomeView(tab) {
   else if (vSmart) vSmart.hidden = false;
 
   const recentsSection = document.getElementById("recents-section");
-  const slotTemplates = document.getElementById("recents-section-slot-templates");
-  const slotSmart = document.getElementById("recents-section-slot-smart");
-  /** Off-screen host when “Your designs” is active — not under #view-designs. */
   const slotPark = document.getElementById("recents-section-park");
-  if (recentsSection && slotTemplates && slotSmart && slotPark) {
-    if (tab === "templates") slotTemplates.appendChild(recentsSection);
-    else if (tab === "smart") slotSmart.appendChild(recentsSection);
-    else slotPark.appendChild(recentsSection);
+  /** Recents grid stays parked off-screen (not under Templates or Smart Match). */
+  if (recentsSection && slotPark) {
+    slotPark.appendChild(recentsSection);
   }
 
   const recentsRail = document.getElementById("recents-rail");
@@ -745,10 +778,7 @@ function setHomeView(tab) {
     stopYourDesignsPolling();
   }
 
-  if (workspaceCacheItems.length) {
-    applyRecentsFilters();
-  }
-  renderTemplatesBrowsePanel();
+  applyRecentsFilters();
 }
 
 function closeSmartMatchAlert() {
