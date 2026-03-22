@@ -1,0 +1,680 @@
+[
+  {
+    "id": "tpl-img-003",
+    "name": "Pharmacy Store — health & wellness flyer",
+    "description": "Clean white and teal pharmacy promo: headline PHARMACY STORE, wellness paragraph, contact arrow banner with phone and URL, pharmacist aisle photo with circular pills inset, rounded UI accents.",
+    "tags": [
+      "pharmacy",
+      "healthcare",
+      "wellness",
+      "medical",
+      "flyer",
+      "social",
+      "contact"
+    ],
+    "dominantColors": [
+      "white",
+      "teal",
+      "black text"
+    ],
+    "clipDescription": "Left column: teal circles logo, title, body copy, teal CONTACT US strip with phone and site. Right: rounded photo of pharmacist in aisle; circular capsule close-up overlap; top-right star and menu dots.",
+    "thumbnail": "assets/templates/pharmacy-store.png",
+    "annotations": [
+      "Header (top left): three teal circles + “PHARMACY STORE” in bold teal caps",
+      "Top right: light grey pill with hollow star (favorite) and triple-dot menu",
+      "Body: black sans-serif paragraph on wellness, prescriptions, vitamins, personal care",
+      "Bottom left: wide teal arrow banner — CONTACT US, phone +123-456-7890, www.reallygreatsite.com",
+      "Right: tall rounded photo of pharmacist in white coat; circular inset of blue/white capsules",
+      "Decor: teal curved shapes framing the photo block"
+    ],
+    "owner": "John Smith",
+    "status": "Template",
+    "designFormat": "Flyer"
+  },
+  {
+    "id": "tpl-img-004",
+    "name": "Larana Travel — hero landing",
+    "description": "Travel agency hero: airplane window view over ocean and islands, dark nav with plane logo, HOME / ABOUT / MORE, large white headline and subhead on photo, boarding-pass and compass line art overlays.",
+    "tags": [
+      "travel",
+      "tourism",
+      "hero",
+      "landing",
+      "airplane",
+      "vacation",
+      "agency"
+    ],
+    "dominantColors": [
+      "ocean blue",
+      "sky blue",
+      "white",
+      "dark slate nav"
+    ],
+    "clipDescription": "Full-bleed wing and sea photo; semi-transparent top nav; bottom-left white headline “Exploring the World…”; white ticket and compass illustrations.",
+    "thumbnail": "assets/templates/larana-travel-hero.png",
+    "annotations": [
+      "Nav bar: airplane icon + “LARANA TRAVEL”; links HOME (active), ABOUT; MORE button with star and dots",
+      "Hero copy (bottom left): “Exploring the World, Expanding the Mind” + sub “The Beauty and Benefits of Travel”",
+      "Background: wing over deep blue sea, islands, clouds",
+      "Overlays: white line-art boarding pass (top left), compass rose (top right)"
+    ],
+    "owner": "Emma Wilson",
+    "status": "Template",
+    "designFormat": "Site / landing page"
+  },
+  {
+    "id": "tpl-img-005",
+    "name": "Flight Academy — bold aviation poster",
+    "description": "Bright sky-blue poster with oversized white FLIGHT / ACADEMY type; white commercial jet woven through letterforms; small wing emblem top-left; star button top-right; footer lorem placeholder lines.",
+    "tags": [
+      "aviation",
+      "flight school",
+      "academy",
+      "poster",
+      "training",
+      "airplane"
+    ],
+    "dominantColors": [
+      "sky blue",
+      "white",
+      "teal tail accent"
+    ],
+    "clipDescription": "Center: white jet at diagonal through huge FLIGHT ACADEMY words for depth; top-left logo; top-right rounded button with star outline.",
+    "thumbnail": "assets/templates/flight-academy.png",
+    "annotations": [
+      "Background: solid vibrant blue field",
+      "Typography: “FLIGHT” and “ACADEMY” in large white caps; plane fuselage and wings layered in front/behind letters",
+      "Top left: small white wing / eagle emblem",
+      "Top right: rounded control with star icon (matches card star affordance)",
+      "Footer: three lines of small centered placeholder copy"
+    ],
+    "owner": "Michael Brown",
+    "status": "Template",
+    "designFormat": "Poster"
+  },
+  {
+    "id": "tpl-img-006",
+    "name": "Fauget Airlines — boarding pass",
+    "description": "Landscape boarding pass template: dark blue FAUGET AIRLINES branding, BOARDING PASS title, vertical barcode, passenger and flight fields, dashed tear line to stub with repeated info and premium crown badge.",
+    "tags": [
+      "airline",
+      "boarding pass",
+      "travel",
+      "ticket",
+      "print",
+      "stub"
+    ],
+    "dominantColors": [
+      "dark blue",
+      "white",
+      "light grey map watermark",
+      "orange accent"
+    ],
+    "clipDescription": "Left main panel: map watermark, barcode in U-frame, AARON LOEB, NEW YORK–CALIFORNIA, AB123, date, gate B22, time 14:00, seat 12B. Right stub mirrors key fields; orange crown icon.",
+    "thumbnail": "assets/templates/fauget-boarding-pass.png",
+    "annotations": [
+      "Header: plane icon + “FAUGET AIRLINES” + large “BOARDING PASS”",
+      "Left: vertical barcode in navy frame; grey world map texture behind fields",
+      "Fields: passenger name, From/To, flight AB123, 15 MARCH, Gate B22, Boarding 14:00, Seat 12B",
+      "Vertical dashed separator before stub",
+      "Stub: condensed repeat of itinerary; small orange crown (premium) on stub"
+    ],
+    "owner": "Sarah Davis",
+    "status": "Template",
+    "designFormat": "Print — ticket"
+  },
+  {
+    "id": "tpl-img-007",
+    "name": "Chicken Biryani — food delivery square",
+    "description": "High-contrast red and yellow square ad: vertical yellow stripe, hero bowl of biryani with motion lines, fork/knife pin logo, CHICKEN BIRYANI title, FREE DELIVERY + phone, 30% discount cloud, ORDER NOW button.",
+    "tags": [
+      "food delivery",
+      "restaurant",
+      "biryani",
+      "social",
+      "promo",
+      "discount",
+      "order"
+    ],
+    "dominantColors": [
+      "deep red",
+      "yellow",
+      "black type"
+    ],
+    "clipDescription": "Center: bowl of rice and chicken on yellow band; red textured field; discount bubble; CTA strip at bottom.",
+    "thumbnail": "assets/templates/chicken-biryani-delivery.png",
+    "annotations": [
+      "Top left: location pin with fork/knife (delivery / restaurant mark)",
+      "Title: “CHICKEN BIRYANI” bold black across top",
+      "Middle left: “FREE DELIVERY” + phone + hand-drawn arrow toward food",
+      "Middle right: yellow cloud badge “Discount 30% OFF”",
+      "Bottom: variant copy (chicken, beef, vegetarian) and dark red ORDER NOW button",
+      "Hero: ceramic bowl with biryani, drumsticks, herbs; white speed lines"
+    ],
+    "owner": "David Lee",
+    "status": "Template",
+    "designFormat": "Instagram post"
+  },
+  {
+    "id": "tpl-img-001",
+    "name": "Warner & Spencer — fried chicken franchise promo",
+    "description": "High-energy franchise marketing layout: bold red field, yellow headline box, fried chicken hero with flame and lightning accents, cartoon chicken logo, and partnership keywords for food-service expansion.",
+    "tags": [
+      "food",
+      "franchise",
+      "fried chicken",
+      "restaurant",
+      "marketing",
+      "social",
+      "promo",
+      "fast food"
+    ],
+    "dominantColors": [
+      "deep red",
+      "yellow",
+      "white",
+      "purple accent"
+    ],
+    "clipDescription": "Left: logo and BUSINESS FRANCHISE headline in yellow box with purple border; yellow pill with Expansion Partnership Growth; right: plated fried chicken with flames and floating drumstick; footer URL.",
+    "thumbnail": "assets/templates/warner-spencer-franchise.png",
+    "annotations": [
+      "Brand (top left): cartoon chicken mascot + “Warner & Spencer” wordmark in white sans-serif",
+      "Headline: “BUSINESS FRANCHISE” in large yellow caps inside a thin purple-outlined box",
+      "Keywords: “Expansion • Partnership • Growth” on a rounded yellow pill",
+      "Hero (right): crispy fried chicken pile on a plate, flame graphics, lightning accents; floating drumstick top-right",
+      "Footer: placeholder URL www.reallygreatsite.com in small white type"
+    ],
+    "owner": "Jennifer Taylor",
+    "status": "Template",
+    "designFormat": "Facebook post"
+  },
+  {
+    "id": "tpl-img-002",
+    "name": "Borcelle — gift delivery flyer",
+    "description": "Warm beige flyer for a parcel gift service: delivery truck + globe mark, bold “DELIVERED” headline, value bullets, large 3D cardboard box with shipping pictograms, and envelope-to-map-pin journey graphic.",
+    "tags": [
+      "delivery",
+      "shipping",
+      "gift",
+      "logistics",
+      "flyer",
+      "print",
+      "ecommerce"
+    ],
+    "dominantColors": [
+      "cream beige",
+      "dark brown",
+      "dark red",
+      "maroon accent"
+    ],
+    "clipDescription": "Split layout: beige background; left heavy 3D box with barcode and fragile/dry/up icons; right stacked headline YOUR SPECIAL GIFT / DELIVERED, bullets, dashed path from envelope to pin, CONTACT US.",
+    "thumbnail": "assets/templates/borcelle-gift-delivery.png",
+    "annotations": [
+      "Brand (top left): globe + truck icon with “Borcelle” wordmark",
+      "Headline (top right): “YOUR SPECIAL GIFT” in brown; “DELIVERED” emphasized in dark red",
+      "Value lines: easy ordering, quality, occasions — right-aligned brown sans-serif",
+      "Hero (bottom left): large angled cardboard box with barcode and shipping symbols (fragile, keep dry, this side up)",
+      "Journey graphic (bottom right): dashed path from envelope to map pin; “CONTACT US!” and site URL"
+    ],
+    "owner": "Robert Moore",
+    "status": "Template",
+    "designFormat": "Flyer"
+  },
+  {
+    "id": "tpl-img-008",
+    "name": "Warner & Spencer — introduction slide",
+    "description": "Deep red slide template: cartoon chicken logo + Warner & Spencer wordmark, large INTRODUCTION headline, two columns of white body copy, hero fried drumstick with flame wrap on the right, corner flame accents, footer URL.",
+    "tags": [
+      "food",
+      "fried chicken",
+      "introduction",
+      "slide",
+      "deck",
+      "franchise",
+      "restaurant"
+    ],
+    "dominantColors": [
+      "deep red",
+      "white",
+      "orange flame"
+    ],
+    "clipDescription": "Left: circular chicken mascot logo, INTRODUCTION title, lorem paragraphs. Right: photoreal drumstick with fire. Bottom: reallygreatsite.com; small chicken peek bottom-left.",
+    "thumbnail": "assets/templates/warner-spencer-introduction.png",
+    "annotations": [
+      "Top left: round logo — cartoon chicken with bowtie + spoon beside “Warner & Spencer” in white",
+      "Center left: “INTRODUCTION” in large white caps; two blocks of white placeholder body text",
+      "Right: large crispy drumstick with realistic orange/yellow flames",
+      "Corners: flame wisps top-left and bottom-right framing the layout",
+      "Footer: www.reallygreatsite.com in small white; extra chicken piece bottom edge"
+    ],
+    "owner": "Lisa Anderson",
+    "status": "Template",
+    "designFormat": "Presentation"
+  },
+  {
+    "id": "tpl-img-009",
+    "name": "Yumm Chick — About Us split",
+    "description": "Split vertical layout: left photo of fried chicken spilling from bucket with tomatoes and dipping sauces; right deep red panel with ABOUT US, Yumm Chick logo, lorem body, Page 04 badge, yellow teardrop motifs, footer URL.",
+    "tags": [
+      "food",
+      "about us",
+      "restaurant",
+      "chicken",
+      "brand",
+      "print",
+      "web"
+    ],
+    "dominantColors": [
+      "deep red",
+      "yellow",
+      "white",
+      "golden brown food"
+    ],
+    "clipDescription": "Left: tipped bucket, chicken pile, condiment bowls, tomatoes; white logo on food. Right: white rounded ABOUT US, yellow circle chicken mark + Yumm Chick, teardrops along inner edge.",
+    "thumbnail": "assets/templates/yumm-chick-about.png",
+    "annotations": [
+      "Left: tipped bucket spilling drumsticks; red tomatoes; wooden board with red/yellow sauce cups; striped napkin",
+      "Right top: circular “Page 04” badge with yellow ring",
+      "Center right: large “ABOUT US” then Yumm Chick logo (yellow disc + chicken silhouette) and white lorem text",
+      "Right edge: vertical column of yellow teardrop shapes; small curved yellow accent bottom-right",
+      "Footer: www.reallygreatsite.com centered in white"
+    ],
+    "owner": "James Thomas",
+    "status": "Template",
+    "designFormat": "Instagram post"
+  },
+  {
+    "id": "tpl-img-010",
+    "name": "Digital Bank — innovation slide",
+    "description": "Dark fintech slide: date top-left, DIGITAL / BANK stacked headline in orange and white, subtitle on innovation, APPLY NOW and star/menu chrome, hand holding credit card center, inset laptop scene, review avatars and 01 page marker.",
+    "tags": [
+      "banking",
+      "fintech",
+      "digital bank",
+      "credit card",
+      "slide",
+      "dark theme"
+    ],
+    "dominantColors": [
+      "black",
+      "orange",
+      "white"
+    ],
+    "clipDescription": "Black background with orange glows; left big type; right small rounded photo; foreground hand + card back; bottom 1.2K REVIEW + 01.",
+    "thumbnail": "assets/templates/digital-bank-slide.png",
+    "annotations": [
+      "Top left: “12 DESEMBER 2025” in white",
+      "Top right: orange APPLY NOW pill; circular star; hamburger and ellipsis controls",
+      "Headline: “DIGITAL” orange / “BANK” white; subtitle on innovation, benefits, challenges",
+      "Center: close-up hand holding card (mag stripe visible); inset top-right: person with laptop + card",
+      "Bottom right: placeholder caption, two avatars + “1.2K REVIEW”; large “01” corner"
+    ],
+    "owner": "Maria Garcia",
+    "status": "Template",
+    "designFormat": "Presentation"
+  },
+  {
+    "id": "tpl-img-011",
+    "name": "Future of Finance — green card promo",
+    "description": "Bright green vertical ad: TRACK / MANAGE / SAVE lines, site URL, large WELCOME TO THE FUTURE OF FINANCE headline, tilted gradient credit card with chip and numbers, driftwood and coral props at base.",
+    "tags": [
+      "finance",
+      "credit card",
+      "banking",
+      "eco",
+      "promo",
+      "social",
+      "vertical"
+    ],
+    "dominantColors": [
+      "green",
+      "white",
+      "gold chip",
+      "natural wood"
+    ],
+    "clipDescription": "Green field; black four-arrow icon under URL; angled card with YOUR NAME HERE; wood and coral bottom styling.",
+    "thumbnail": "assets/templates/future-of-finance-green.png",
+    "annotations": [
+      "Top left: stacked “TRACK. MANAGE. SAVE.” in bold white",
+      "Top right: REALLYGREATSITE.COM + minimalist four-arrows icon",
+      "Center: multi-line headline “WELCOME TO THE FUTURE OF FINANCE”",
+      "Middle: tilted card — “credit”, chip, contactless, masked PAN, VALID DATES 00/00, YOUR NAME HERE",
+      "Bottom: diagonal driftwood, white coral cluster, small stone"
+    ],
+    "owner": "William Martinez",
+    "status": "Template",
+    "designFormat": "Instagram story"
+  },
+  {
+    "id": "tpl-img-012",
+    "name": "Borcelle — stacked credit cards",
+    "description": "Blue marketing graphic: Borcelle Company header, Upgrade Your Lifestyle / Credit Card headline in yellow and white, three thick 3D credit cards staggered (black, yellow, lavender) with chips and numbers, hex pattern corners.",
+    "tags": [
+      "credit card",
+      "lifestyle",
+      "Borcelle",
+      "banking",
+      "promo",
+      "3D"
+    ],
+    "dominantColors": [
+      "blue",
+      "yellow",
+      "black",
+      "lavender"
+    ],
+    "clipDescription": "Centered headline stack; three rounded 3D cards diagonal; each shows Credit card label, numbers, colored bottom stripe.",
+    "thumbnail": "assets/templates/borcelle-credit-cards.png",
+    "annotations": [
+      "Top: “Borcelle Company” — Borcelle yellow, Company white",
+      "Headline: “Upgrade” + “Credit Card” in bold yellow; connecting lines in white",
+      "Cards (front to back): matte black with yellow chip and yellow footer bar; bright yellow card; light purple card — each with chip, contactless, numbers",
+      "Background: medium blue with faint hex outlines in corners"
+    ],
+    "owner": "Patricia White",
+    "status": "Template",
+    "designFormat": "Facebook post"
+  },
+  {
+    "id": "tpl-img-013",
+    "name": "Rimberio Bank — loan campaign",
+    "description": "Vertical bank ad: purple-pink gradient photo overlay on handshake, RIMBERIO BANK + tagline, top-right star and menu, large lime-to-cyan speech bubble “Borrow money up to $1,000.”, navy footer with terms, APPLY FOR LOAN NOW button, gold crown badge.",
+    "tags": [
+      "bank",
+      "loan",
+      "borrow",
+      "finance",
+      "handshake",
+      "CTA"
+    ],
+    "dominantColors": [
+      "purple pink gradient",
+      "navy",
+      "lime cyan",
+      "white"
+    ],
+    "clipDescription": "Top: desk handshake under purple overlay; middle: gradient speech bubble; bottom: dashed navy texture, gradient blue CTA, crown.",
+    "thumbnail": "assets/templates/rimberio-bank-loan.png",
+    "annotations": [
+      "Top: handshake across desk with purple/pink wash; “RIMBERIO BANK” + secure trusted tagline in white",
+      "Top right: faint star and ellipsis in rounded pill (favorites / more)",
+      "Center: big rounded bubble — green-to-blue gradient, white “Borrow money up to $1,000.”",
+      "Bottom: navy dashed pattern; “Terms & Conditions apply.” + URL left",
+      "Bottom right: light blue gradient “APPLY FOR LOAN NOW” button; small gold crown icon outside"
+    ],
+    "owner": "Richard Harris",
+    "status": "Template",
+    "designFormat": "Banner / ad"
+  },
+  {
+    "id": "tpl-img-014",
+    "name": "Ingoude Company — pharmacy service banner",
+    "description": "Square blue-and-white pharmacy promo: mortar-and-pestle + Ingoude Company logo, pharmacist photo top-right, halftone and curved S-shapes, 24/7 Hours Open badge, Pharmacy Store serif headline, wellness tagline, Contact Us pill, dot grid accent.",
+    "tags": [
+      "pharmacy",
+      "healthcare",
+      "24/7",
+      "banner",
+      "social",
+      "CTA",
+      "lab services"
+    ],
+    "dominantColors": [
+      "vibrant blue",
+      "white",
+      "light grey blue"
+    ],
+    "clipDescription": "Curved blue panels; top split logo vs photo; center white ring badge; bottom solid blue band with serif title and Contact Us button.",
+    "thumbnail": "assets/templates/ingoude-pharmacy-banner.png",
+    "annotations": [
+      "Top left: blue mortar + pestle with + mark; “Ingoude Company” wordmark",
+      "Top right: pharmacist in white coat behind counter with product box and slip",
+      "Center: white circle badge — “24/7” + “Hours Open” on halftone dot field with curved frames",
+      "Bottom: large white serif “Pharmacy Store”; italic subline on trusted health, wellness, lab",
+      "Bottom right: light pill “Contact Us” in blue; decorative dot grid corner"
+    ],
+    "owner": "Linda Clark",
+    "status": "Template",
+    "designFormat": "Social post"
+  },
+  {
+    "id": "tpl-img-015",
+    "name": "Fradel and Spies — dental pharmacy promo",
+    "description": "Square ad: cart+gear logo and Fradel and Spies name, huge teal DENTAL PHARMACY headline, trust paragraph, SHOP NOW teal button, blurred pharmacy aisle background, 3D cart with bottles and large molar prop.",
+    "tags": [
+      "dental",
+      "pharmacy",
+      "oral health",
+      "retail",
+      "promo",
+      "teal",
+      "3D"
+    ],
+    "dominantColors": [
+      "teal",
+      "white",
+      "red accents",
+      "black type"
+    ],
+    "clipDescription": "Left: headline stack and CTA; soft-focus shelves behind; bottom-right: miniature cart, red-cap bottles with crosses, glossy tooth model.",
+    "thumbnail": "assets/templates/fradel-spies-dental-pharmacy.png",
+    "annotations": [
+      "Top left: shopping cart with gear icon + “Fradel and Spies” in black",
+      "Hero: “DENTAL PHARMACY” in bold teal caps",
+      "Body: one-stop dental and oral health paragraph in black",
+      "CTA: rounded teal “SHOP NOW” with white icon + text",
+      "Foreground: silver cart on teal surface; three white bottles with red caps and plus labels; large white molar"
+    ],
+    "owner": "Joseph Lewis",
+    "status": "Template",
+    "designFormat": "Social post"
+  },
+  {
+    "id": "tpl-img-016",
+    "name": "Air Travel — online agency logo",
+    "description": "White-background logo mark: light blue globe with white continents, dark blue airplane with four curved flight paths wrapping the globe, light blue arc frames, AIR TRAVEL + ONLINE AGENCY wordmark.",
+    "tags": [
+      "travel",
+      "logo",
+      "airline",
+      "agency",
+      "globe",
+      "brand"
+    ],
+    "dominantColors": [
+      "light blue",
+      "dark blue",
+      "white"
+    ],
+    "clipDescription": "Centered icon: globe + plane trails; stacked caps text below in two blues.",
+    "thumbnail": "assets/templates/air-travel-agency-logo.png",
+    "annotations": [
+      "Icon: circular globe (light blue) with simplified white landmasses",
+      "Plane: dark blue silhouette upper-right with motion trails curving around globe",
+      "Framing: thin light blue partial rings left and right of globe",
+      "Type: “AIR TRAVEL” bold dark blue; “ONLINE AGENCY” smaller lighter blue with letterspacing"
+    ],
+    "owner": "Barbara Walker",
+    "status": "Template",
+    "designFormat": "Logo / brand"
+  },
+  {
+    "id": "tpl-img-017",
+    "name": "plusplus pharmacy — brand logo",
+    "description": "White-background logo: rounded cross/plus mark with blue-to-cyan gradients and layered intersection; stacked wordmark “plusplus pharmacy” in vibrant blue lowercase.",
+    "tags": [
+      "pharmacy",
+      "logo",
+      "healthcare",
+      "cross",
+      "brand",
+      "minimal"
+    ],
+    "dominantColors": [
+      "blue",
+      "cyan",
+      "white"
+    ],
+    "clipDescription": "Left: two overlapping pill bars forming plus; right: two-line lowercase sans title.",
+    "thumbnail": "assets/templates/plusplus-pharmacy-logo.png",
+    "annotations": [
+      "Icon: horizontal bar gradient medium blue → light cyan; vertical bar light cyan → medium blue; darker blue overlap at center",
+      "Wordmark: “plusplus” / “pharmacy” stacked, bold rounded sans, solid blue",
+      "Layout: icon left, text right; clean white field"
+    ],
+    "owner": "Thomas Hall",
+    "status": "Template",
+    "designFormat": "Logo / brand"
+  },
+  {
+    "id": "tpl-img-018",
+    "name": "Chicken Wings — brand logo",
+    "description": "Square red field: white line-art chicken head/neck, bold CHICKEN in rounded sans, WINGS in script, arched tagline Best wings in town — all white on red.",
+    "tags": [
+      "food",
+      "chicken wings",
+      "logo",
+      "restaurant",
+      "brand",
+      "red"
+    ],
+    "dominantColors": [
+      "red",
+      "white"
+    ],
+    "clipDescription": "Centered vertical stack: illustration, bold sans, script, small curved tagline.",
+    "thumbnail": "assets/templates/chicken-wings-logo.png",
+    "annotations": [
+      "Top: minimalist white outline chicken head and neck",
+      "Middle: “Chicken” bold rounded white caps; “Wings” white script below",
+      "Bottom: small curved sans tagline “Best wings in town”",
+      "Background: solid vibrant red square"
+    ],
+    "owner": "Susan Allen",
+    "status": "Template",
+    "designFormat": "Logo / brand"
+  },
+  {
+    "id": "tpl-img-019",
+    "name": "Cafe Fauget — Special Coffee menu",
+    "description": "Vertical flyer: cream field with coffee leaf/bean line art; huge orange script “Coffee” header; three iced drinks in cups (Americano, Vanilla Latte, Lemon Tea) with prices, Best Seller starbursts; mini list (Iced Chocolate, Cappuccino, Iced Tea); CAFE FAUGET ovals and address; scattered orange stars; premium crown badge corner.",
+    "tags": [
+      "coffee",
+      "cafe",
+      "menu",
+      "drinks",
+      "iced coffee",
+      "Fauget",
+      "flyer",
+      "print"
+    ],
+    "dominantColors": [
+      "orange",
+      "cream",
+      "off-white"
+    ],
+    "clipDescription": "Top: Special + script Coffee; middle: three plastic cups with badges; bottom-right: caps price list; footer: twin oval logos + street line.",
+    "thumbnail": "assets/templates/cafe-fauget-special-coffee.png",
+    "annotations": [
+      "Header: “Special” small orange sans above oversized orange script “Coffee”",
+      "Drinks row: Iced Americano ($2.99) with Best Seller burst; Iced Vanilla Latte ($3.99); Iced Lemon Tea ($3.99) with Best Seller — each “Favorite Coffee at The Fauget Cafe”",
+      "Secondary list: ICED CHOCOLATE $4.99, CAPPUCCINO $2.99, ICED TEA $2.99",
+      "Footer: two orange oval “CAFE FAUGET” locks flanking “CAFE LOCATION / 123 ANYWHERE ST., ANY CITY”",
+      "Background: subtle botanical line art; small orange star sparkles; bottom-right dark circle with gold crown (premium template)"
+    ],
+    "owner": "Charles Young",
+    "status": "Template",
+    "designFormat": "Menu"
+  },
+  {
+    "id": "tpl-img-020",
+    "name": "Coffee Menu — split photo + list",
+    "description": "Landscape menu: left ~40% hero photo of mug, book, and knit blanket with cream badge “menu / Coffee”; right beige panel with four rows — AMERICANO, LATTE, BLACK ORANGE, MOCHA — each with square drink photo, lorem description, vertical rule, and serif price ($5–$9).",
+    "tags": [
+      "coffee",
+      "menu",
+      "cafe",
+      "print",
+      "price list",
+      "serif",
+      "cozy"
+    ],
+    "dominantColors": [
+      "beige",
+      "grey green mug",
+      "dark brown text"
+    ],
+    "clipDescription": "Flex split: lifestyle still-life left; ruled rows with thumbnails and prices right.",
+    "thumbnail": "assets/templates/coffee-menu-split.png",
+    "annotations": [
+      "Left: cozy flat-lay — knit, open book, green cup and spoon; overlay badge “menu” over “Coffee” in cream rounded rect",
+      "Right: four horizontal rules; each row = square drink thumb, bold caps name, three lines lorem, | divider, large $ price",
+      "Items: AMERICANO $5, LATTE $6, BLACK ORANGE $8, MOCHA $9 (partial)",
+      "Palette: earthy beige panel (#E5E1D8 style) vs muted photo tones"
+    ],
+    "owner": "Karen King",
+    "status": "Template",
+    "designFormat": "Menu"
+  },
+  {
+    "id": "yd-inprogress-coffee",
+    "name": "Coffee Cafe — discount promo",
+    "description": "Cafe discount flyer: tan and black layout with coffee photography — pour-over brewing, latte art cup, iced drink hero; Coffee Cafe script header; SPECIAL DISCOUNT and 30% OFF badge; indulgent promo copy on black panel; limited-time offer footer.",
+    "tags": [
+      "coffee",
+      "cafe",
+      "promo",
+      "discount",
+      "flyer",
+      "iced coffee",
+      "beverage"
+    ],
+    "dominantColors": [
+      "tan",
+      "black",
+      "brown",
+      "cream"
+    ],
+    "clipDescription": "Grid of brew and drink photos; large discount circle; white type on black for body copy; cafe branding corner.",
+    "thumbnail": "assets/in-progress/coffee-cafe-discount-promo.png",
+    "annotations": [
+      "In progress: promotional cafe flyer with 30% off offer",
+      "Photo grid: pour-over, latte art, iced coffee with beans",
+      "Discount badge and SPECIAL DISCOUNT headline",
+      "Footer: offer validity and terms"
+    ],
+    "owner": "You",
+    "status": "In progress",
+    "designFormat": "Flyer"
+  },
+  {
+    "id": "yd-inprogress-flight",
+    "name": "Massive Global Sale — airline poster",
+    "description": "Airline sale poster: bright blue sky with diagonal commercial wing; bold MASSIVE GLOBAL SALE typography; 50% off flights offer; seat reservation strip; contact phone and website in footer blocks.",
+    "tags": [
+      "airline",
+      "sale",
+      "aviation",
+      "travel",
+      "promo",
+      "flight",
+      "wing"
+    ],
+    "dominantColors": [
+      "sky blue",
+      "white",
+      "black"
+    ],
+    "clipDescription": "Photographic wing on blue; stacked headline blocks; GET 50% OFF outline; black footer with MORE INFORMATION.",
+    "thumbnail": "assets/in-progress/airline-sale-poster.png",
+    "annotations": [
+      "In progress: vertical flight sale creative",
+      "Hero: jet wing over clear blue sky",
+      "Headline: MASSIVE / GLOBAL SALE with bordered type",
+      "CTA: seat reservation and contact strip"
+    ],
+    "owner": "You",
+    "status": "In progress",
+    "designFormat": "Poster"
+  }
+]
