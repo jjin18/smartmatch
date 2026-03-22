@@ -380,40 +380,6 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
-.home-header-row {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 8px;
-}
-
-.model-badge {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: #fef3c7;
-  color: #b45309;
-  border: 1px solid #fcd34d;
-}
-
-.model-badge.is-ready {
-  background: #ecfdf5;
-  color: #047857;
-  border-color: #6ee7b7;
-}
-
-.model-badge.is-error {
-  background: #fef2f2;
-  color: #b91c1c;
-  border-color: #fecaca;
-}
-
-.model-badge.is-warn {
-  background: #fffbeb;
-  color: #b45309;
-  border-color: #fcd34d;
-}
-
 .home-hero {
   margin: 0 0 16px;
   font-family: "Inter", "Plus Jakarta Sans", system-ui, sans-serif;

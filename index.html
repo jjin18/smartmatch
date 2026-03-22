@@ -34,7 +34,7 @@
           <span class="nav-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg></span>
           <span>Templates</span>
         </button>
-        <button type="button" class="nav-item nav-ai is-active" data-nav-tab="smart" title="Smart Match — find related work across the team">
+        <button type="button" class="nav-item nav-ai is-active" data-nav-tab="smart" title="Smart Match · related work across the team">
           <span class="nav-ico nav-sparkle" aria-hidden="true">✦</span>
           <span>Smart Match</span>
         </button>
@@ -62,9 +62,6 @@
 
     <div class="home">
       <header class="home-header">
-        <div class="home-header-row">
-          <span id="model-status" class="model-badge" role="status">Checking model…</span>
-        </div>
         <h1 class="home-hero">What will you design today?</h1>
         <p class="home-hero-sub">
           On large teams, work gets buried in folders and DMs—Smart Match cuts that bottleneck by surfacing who already solved a similar problem so you can align and ship without duplicate effort.
@@ -98,7 +95,7 @@
               <p class="smart-panel-eyebrow">In progress</p>
               <h2 class="panel-title">Your designs</h2>
               <p class="panel-sub">
-                <strong>In progress</strong> on the left; similar templates on the right. At scale, this keeps owners visible so big teams don’t lose track of who’s on what—open a row to <strong>collaborate</strong> without chasing status updates.
+                <strong>In progress</strong> left; similar templates right. Keeps owners visible on large squads—open a row to <strong>collaborate</strong> without status ping-pong.
               </p>
             </div>
             <div class="yd-layout" id="yd-layout">
@@ -127,9 +124,7 @@
         <div id="view-templates" class="home-view" hidden>
           <section class="panel templates-browse-panel">
             <h2 class="panel-title">Templates</h2>
-            <p class="panel-sub">
-              Shared building blocks across the org—filter fast so designers and marketers aren’t reinventing the same layout when the team already has one.
-            </p>
+            <p class="panel-sub">Org-wide layouts—filter fast so people don’t rebuild what already exists.</p>
             <div id="templates-search-bar" class="templates-search-bar" role="search">
               <span class="templates-search-icon" aria-hidden="true">
                 <svg class="templates-search-lens" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -154,7 +149,7 @@
               <button type="button" class="cat-pill" data-cat="print" aria-pressed="false">Print</button>
             </div>
             <p class="templates-placeholder">
-              Use <button type="button" class="templates-smart-link"><strong>Smart Match</strong></button> to find overlaps across squads—reduce duplicate briefs and handoff delays when many people touch the same brand system.
+              <button type="button" class="templates-smart-link"><strong>Smart Match</strong></button> — spot overlap across groups before duplicate briefs stack up on shared brand work.
             </p>
             <p id="templates-browse-empty" class="templates-browse-empty" hidden role="status"></p>
             <div id="templates-browse-grid" class="templates-browse-grid" aria-label="Template thumbnails"></div>
@@ -166,9 +161,8 @@
           <div class="panel-head">
             <h2 class="panel-title">Smart Match</h2>
             <p class="panel-sub">
-              Big teams stall when nobody knows what already exists—everyone asks the same questions in Slack and files diverge. Describe what you need (or upload a reference); Smart Match ranks work from your workspace so the right people connect before deadlines slip.<br />
-              <strong>Less duplicate work, clearer ownership, faster collaboration at scale.</strong><br />
-              Rankings blend <strong>meaning</strong>, <strong>keywords</strong>, and <strong>visual signals</strong> (color, layout cues)—not plain title search—so matches stay relevant across a crowded library.
+              At scale, the same question hits ten Slack threads and files fork. Brief what you need—or upload a reference—and get ranked matches from your workspace so the right owner gets pulled in early.<br />
+              <strong>Less duplication, clearer ownership.</strong> Scores use <strong>meaning</strong>, <strong>keywords</strong>, and <strong>visual cues</strong> (not title search alone).
             </p>
           </div>
 
@@ -180,7 +174,7 @@
             <button type="button" class="trigger is-active" data-trigger="design">New design</button>
             <button type="button" class="trigger" data-trigger="upload">Upload asset</button>
           </div>
-          <p class="triggers-hint">One clear brief beats a chain of pings—match first, then loop in owners without the usual multi-team noise.</p>
+          <p class="triggers-hint">Brief once, match, then loop in owners—skip the scavenger hunt across threads.</p>
 
           <div id="upload-asset-panel" class="upload-asset-panel" hidden>
             <label class="upload-asset-pick">
@@ -191,7 +185,7 @@
               <img id="upload-asset-preview-img" alt="" />
               <button type="button" class="upload-asset-clear" id="upload-asset-clear" aria-label="Remove image">×</button>
             </div>
-            <p class="upload-asset-hint">JPEG, PNG, WebP, or GIF · optional brief below helps align with shared brand work across the team</p>
+            <p class="upload-asset-hint">JPEG, PNG, WebP, or GIF · optional brief tightens brand-consistent matches</p>
           </div>
 
           <label class="field-label" for="description">Brief</label>
@@ -199,7 +193,7 @@
             id="description"
             class="field-textarea"
             rows="4"
-            placeholder="e.g. Q2 launch social set, cooler palette, hero + RSVP—match what the team already shipped…"
+            placeholder="e.g. Q2 social, cooler palette, hero + RSVP—tie to work the team already shipped"
             autocomplete="off"
           ></textarea>
           <button type="button" class="btn btn-primary scan-btn" id="scan-btn">
@@ -212,10 +206,10 @@
         <section class="panel match-panel" id="match-section" hidden aria-live="polite">
           <p id="match-source" class="match-source"></p>
           <h2 class="panel-title">Similar in your workspace</h2>
-          <p class="match-panel-lead">Ranked by fit to your brief—so you can route work to the right owners instead of opening yet another generic folder trawl.</p>
+          <p class="match-panel-lead">Ranked by fit to your brief—surfaces who to talk to instead of blind folder search.</p>
           <p id="match-trim-hint" class="match-trim-hint" hidden></p>
           <div id="match-list" class="match-list"></div>
-          <p id="match-empty" class="match-empty" hidden>No strong match yet—add team or campaign context (or a different reference) and run again so others can find your ask across the workspace.</p>
+          <p id="match-empty" class="match-empty" hidden>No strong match—add context or change the reference and run again.</p>
           <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
         </section>
         </div>
@@ -243,7 +237,7 @@
       aria-labelledby="sma-title"
     >
       <p class="smart-match-alert__badge">Smart Match</p>
-      <h3 id="sma-title" class="smart-match-alert__title">Strong overlap—align before duplicate work spreads</h3>
+      <h3 id="sma-title" class="smart-match-alert__title">Close match—risk of duplicate work</h3>
       <p class="smart-match-alert__sub" id="sma-sub"></p>
       <div class="smart-match-alert__compare">
         <figure class="smart-match-alert__fig">

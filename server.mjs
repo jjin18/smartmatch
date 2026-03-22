@@ -672,7 +672,7 @@ app.post("/api/match-from-image", upload.single("image"), async (req, res) => {
     const query = [
       `Uploaded image "${fname}"`,
       `Colors from pixels: ${paletteWords.join(", ")}`,
-      note || "Match workspace designs by color and description.",
+      note || "Match by color and description.",
     ].join(". ");
     /** Embedding only: dense terms so MiniLM is not swamped by filler sentences. */
     const embedQuery = [note, paletteWords.join(" "), stem].filter(Boolean).join(". ") || paletteWords.join(" ");
@@ -690,7 +690,7 @@ app.post("/api/match-from-image", upload.single("image"), async (req, res) => {
     };
     if (anthropicApiKey()) {
       payload.warning =
-        "Image uploads use the local matcher: pixel colors vs workspace thumbnails + text metadata (not Claude vision). Add a text brief without upload for Claude ranking.";
+        "Uploads use local color + text matching (not Claude vision). For Claude, run Find similar without an image.";
     }
     res.json(payload);
   } catch (err) {

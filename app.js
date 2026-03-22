@@ -5,7 +5,6 @@ const scanHint = document.getElementById("scan-hint");
 const matchSection = document.getElementById("match-section");
 const toast = document.getElementById("toast");
 const sidebarCreate = document.getElementById("sidebar-create");
-const modelStatus = document.getElementById("model-status");
 const envHint = document.getElementById("env-hint");
 const recentList = document.getElementById("recent-list");
 const recentsGrid = document.getElementById("recents-grid");
@@ -217,37 +216,16 @@ function recentsFormatPillLabel(index) {
   return RECENTS_FORMAT_PILL_LABELS[index % RECENTS_FORMAT_PILL_LABELS.length];
 }
 
-/** @param {"ready"|"warn"|"error"} kind */
-function setModelBadge(kind, detail) {
-  if (!modelStatus) return;
-  modelStatus.classList.remove("is-ready", "is-error", "is-warn");
-  modelStatus.textContent = detail || "—";
-  if (kind === "ready") modelStatus.classList.add("is-ready");
-  else if (kind === "warn") modelStatus.classList.add("is-warn");
-  else modelStatus.classList.add("is-error");
-}
-
+/** Toggles env hint when the app isn’t served by the Smart Match server (e.g. file:// or wrong port). */
 async function refreshHealth() {
   try {
     const h = await (await fetch("/api/health")).json();
     if (!h.modelReady) {
-      setModelBadge("error", "Check server · data/workspace.json");
       if (envHint) envHint.hidden = false;
       return;
     }
-    const parts = [`${h.assetCount} assets`];
-    parts.push(h.llm ? `LLM: ${h.anthropicModel || "Claude"}` : "Local scorer");
-    parts.push(h.embeddings ? `embeddings ${h.embeddingDim ?? "?"}` : "no embeddings");
-    if (h.envFileExists === false) {
-      parts.push("no .env");
-    }
-    if (h.matchFromImage !== true) {
-      parts.push("restart server for image upload");
-    }
-    setModelBadge(h.embeddings || h.llm ? "ready" : "warn", parts.join(" · "));
     if (envHint) envHint.hidden = true;
   } catch {
-    setModelBadge("error", "Run npm start · open in browser");
     if (envHint) envHint.hidden = false;
   }
 }
@@ -945,13 +923,13 @@ function renderMatches(data) {
   if (source) {
     if (data.source === "claude") {
       source.textContent =
-        "Claude ranked from your brief (semantic, not keyword search)—use results to reach the right owners on a large team.";
+        "Claude · semantic ranking from your brief—use it to pick the right owner on a busy team.";
     } else if (data.source === "local-upload") {
       source.textContent =
-        "Upload: pixel palette + average color vs thumbnails, plus text embeddings (local). Helps route work when many people share one library—not full vision AI.";
+        "Upload: palette + thumbnail color vs library, plus text embeddings (local, not vision AI).";
     } else {
       source.textContent =
-        "Local: meaning · keywords · color · layout (see bars)—surfaces overlaps so squads don’t duplicate the same brief.";
+        "Local scorer · meaning, keywords, color, layout—surfaces overlap before squads duplicate briefs.";
     }
   }
   if (!list) return;
@@ -1031,7 +1009,7 @@ function openMatchActionModal(action, asset) {
 
   if (action === "collab") {
     matchModalTitle.textContent = "Collaborate";
-    matchModalDesc.innerHTML = `${ownerStrong} is notified when you join this file—reduces “who’s on this?” churn on large teams. The design opens in a full preview here so you can review in context.`;
+    matchModalDesc.innerHTML = `${ownerStrong} is notified when you join. Full preview opens here—fewer “who owns this?” loops on big teams.`;
     if (asset?.thumbnail && previewImg && previewWrap) {
       previewImg.src = publicAssetUrl(asset.thumbnail);
       previewImg.alt = safe(name);
@@ -1244,8 +1222,8 @@ scanBtn.addEventListener("click", async () => {
   scanBtn.disabled = true;
   scanHint.hidden = false;
   scanHint.textContent = isUpload
-    ? "Reading your image and scanning the shared workspace for close matches…"
-    : "Matching your brief across the team library (meaning, keywords, visuals)…";
+    ? "Scanning your image against the workspace…"
+    : "Matching your brief to the library…";
   matchSection.hidden = true;
   toast.hidden = true;
 
@@ -1268,7 +1246,6 @@ scanBtn.addEventListener("click", async () => {
         ? e.message
         : "Request failed · npm start → http://localhost:3000";
     showToast(msg);
-    setModelBadge("error", "Match failed · see message");
   } finally {
     scanBtn.disabled = false;
   }
