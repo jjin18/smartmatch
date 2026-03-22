@@ -22,11 +22,11 @@
         <span class="nav-create-label">Create</span>
       </button>
       <div class="nav-items">
-        <button type="button" class="nav-item is-active" data-nav-tab="designs" title="Home">
+        <button type="button" class="nav-item" id="nav-rail-home" title="Home">
           <span class="nav-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg></span>
           <span>Home</span>
         </button>
-        <button type="button" class="nav-item" data-nav-tab="designs" title="Projects">
+        <button type="button" class="nav-item is-active" data-nav-tab="designs" data-nav-projects="true" title="Projects">
           <span class="nav-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></span>
           <span>Projects</span>
         </button>
@@ -44,10 +44,10 @@
       </div>
     </nav>
 
-    <aside class="recents-rail" id="recents-rail" aria-label="Recent designs">
+    <aside class="recents-rail" id="recents-rail" aria-label="Recent designs" hidden>
       <div class="rail-card rail-card--dashed">
         <p class="rail-card-title">Star designs and folders</p>
-        <p class="rail-card-text">Save items to find them quickly.</p>
+        <p class="rail-card-text">Star items for quick access.</p>
       </div>
       <p class="rail-heading">Recent designs</p>
       <ul class="recent-list" id="recent-list"></ul>
@@ -56,7 +56,7 @@
     <div class="home">
       <header class="home-header">
         <div class="home-header-row">
-          <span id="model-status" class="model-badge" role="status">Checking local model…</span>
+          <span id="model-status" class="model-badge" role="status">Checking model…</span>
         </div>
         <h1 class="home-hero">What will you design today?</h1>
         <div class="home-tabs" role="tablist">
@@ -79,29 +79,6 @@
             <span>Templates</span>
           </button>
         </div>
-        <div class="home-search" role="search">
-          <span class="home-search-icon" aria-hidden="true">
-            <svg class="home-search-lens" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-            <svg class="home-search-sparkle" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.2 4L17 7l-4 1.2L12 12l-1.2-4L7 7l4-1.2L12 2z"/></svg>
-          </span>
-          <input
-            type="search"
-            class="home-search-input"
-            placeholder="Filter by design title…"
-            id="global-search"
-            autocomplete="off"
-            aria-label="Filter Recents by design title"
-          />
-          <button type="button" class="home-filter" aria-label="Filters" title="Filters">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
-          </button>
-        </div>
-        <div class="category-row" aria-label="Design types">
-          <button type="button" class="cat-pill" data-cat="presentation" aria-pressed="false">Presentation</button>
-          <button type="button" class="cat-pill" data-cat="social" aria-pressed="false">Social media</button>
-          <button type="button" class="cat-pill" data-cat="video" aria-pressed="false">Video</button>
-          <button type="button" class="cat-pill" data-cat="print" aria-pressed="false">Print</button>
-        </div>
       </header>
 
       <div class="home-body">
@@ -111,7 +88,7 @@
               <p class="smart-panel-eyebrow">In progress</p>
               <h2 class="panel-title">Your designs</h2>
               <p class="panel-sub">
-                One <strong>in-progress</strong> design on the left; <strong>Smart Match</strong> lists similar templates on the right (scrollable). Use <strong>Collaborate</strong> on any row—no extra steps.
+                <strong>In progress</strong> on the left; similar templates on the right. <strong>Collaborate</strong> on a row for next steps.
               </p>
             </div>
             <div class="yd-layout" id="yd-layout">
@@ -127,7 +104,7 @@
               <aside class="yd-matches-aside" aria-labelledby="yd-matches-heading">
                 <h3 class="yd-matches-heading" id="yd-matches-heading">Similar templates</h3>
                 <p class="yd-matches-summary" id="yd-matches-summary" aria-live="polite"></p>
-                <div class="yd-match-list-wrap" id="yd-match-list-wrap" role="region" aria-label="Similar templates ranked by Smart Match">
+                <div class="yd-match-list-wrap" id="yd-match-list-wrap" role="region" aria-label="Similar templates (ranked)">
                   <div id="yd-match-list" class="yd-match-list"></div>
                 </div>
               </aside>
@@ -139,8 +116,33 @@
         <div id="view-templates" class="home-view" hidden>
           <section class="panel templates-browse-panel">
             <h2 class="panel-title">Templates</h2>
-            <p class="panel-sub">Browse ready-made layouts—hook this to your template library in a full build.</p>
-            <p class="templates-placeholder">Use the category chips above or open <button type="button" class="templates-smart-link"><strong>Smart Match</strong></button> to describe what you need.</p>
+            <p class="panel-sub">Ready-made layouts from your workspace.</p>
+            <div id="templates-search-bar" class="templates-search-bar" role="search">
+              <span class="templates-search-icon" aria-hidden="true">
+                <svg class="templates-search-lens" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                <svg class="templates-search-sparkle" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.2 4L17 7l-4 1.2L12 12l-1.2-4L7 7l4-1.2L12 2z"/></svg>
+              </span>
+              <input
+                type="search"
+                class="templates-search-input"
+                placeholder="Filter by title…"
+                id="global-search"
+                autocomplete="off"
+                aria-label="Filter by title"
+              />
+              <button type="button" class="templates-search-filter" aria-label="Filters" title="Filters">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+              </button>
+            </div>
+            <div id="templates-category-row" class="templates-category-row" aria-label="Design types">
+              <button type="button" class="cat-pill" data-cat="presentation" aria-pressed="false">Presentation</button>
+              <button type="button" class="cat-pill" data-cat="social" aria-pressed="false">Social media</button>
+              <button type="button" class="cat-pill" data-cat="video" aria-pressed="false">Video</button>
+              <button type="button" class="cat-pill" data-cat="print" aria-pressed="false">Print</button>
+            </div>
+            <p class="templates-placeholder">Use chips or <button type="button" class="templates-smart-link"><strong>Smart Match</strong></button> to describe what you need.</p>
+            <div id="templates-browse-grid" class="templates-browse-grid" aria-label="Template thumbnails"></div>
+            <div id="recents-section-slot-templates" class="recents-slot"></div>
           </section>
         </div>
 
@@ -152,60 +154,58 @@
             <p class="panel-sub">
               Describe what you’re making in a <strong>brief</strong>. Smart Match ranks workspace files by <strong>meaning</strong>, <strong>keywords</strong>, <strong>color</strong>, and <strong>layout</strong>—not plain text search—so you can jump into <strong>similar work</strong> and collaborate instead of starting cold.
             </p>
-            <p class="smart-callout">
-              <span class="smart-callout-icon" aria-hidden="true">↻</span>
-              <span><strong>Iterative:</strong> change your brief and run again—the list updates to track what you’re designing.</span>
-            </p>
           </div>
 
           <p id="env-hint" class="env-hint" hidden>
-            <strong>No API:</strong> run <code>npm install</code> then <code>npm start</code> and open <code>http://localhost:3000</code> (do not open this file directly).
+            <strong>Server required:</strong> <code>npm install</code> → <code>npm start</code> → <code>http://localhost:3000</code> (don’t open this HTML file directly).
           </p>
 
-          <div class="triggers" role="group" aria-label="Starting from">
+          <div class="triggers" role="group" aria-label="Brief context">
             <button type="button" class="trigger is-active" data-trigger="design">New design</button>
             <button type="button" class="trigger" data-trigger="upload">Upload asset</button>
             <button type="button" class="trigger" data-trigger="template">New template</button>
           </div>
-          <p class="triggers-hint">These set context for your brief—they don’t filter like a search box.</p>
+          <p class="triggers-hint">Sets brief context only—not a search filter.</p>
 
-          <label class="field-label" for="description">Design brief (what you’re making or changing)</label>
+          <label class="field-label" for="description">Brief</label>
           <textarea
             id="description"
             class="field-textarea"
             rows="4"
-            placeholder="e.g. Tightening the hero copy, switching to a cooler palette, adding an RSVP block for email…"
+            placeholder="e.g. Cooler palette, tighter hero copy, RSVP block for email…"
             autocomplete="off"
           ></textarea>
           <button type="button" class="btn btn-primary scan-btn" id="scan-btn">
             <span class="scan-btn-icon" aria-hidden="true">✦</span>
-            Find similar designs
+            Find similar
           </button>
-          <p class="hint" id="scan-hint" hidden>Running embeddings locally…</p>
+          <p class="hint" id="scan-hint" hidden>Running match…</p>
         </section>
 
         <section class="panel match-panel" id="match-section" hidden aria-live="polite">
           <p id="match-source" class="match-source"></p>
-          <h2 class="panel-title">Similar designs in your workspace</h2>
-          <p class="match-panel-lead">Ranked by multi-signal similarity to your brief—not keyword lookup.</p>
+          <h2 class="panel-title">Similar in your workspace</h2>
+          <p class="match-panel-lead">Ranked by fit to your brief (not keyword search).</p>
           <p id="match-trim-hint" class="match-trim-hint" hidden></p>
           <div id="match-list" class="match-list"></div>
           <p id="match-empty" class="match-empty" hidden>No strong similarity yet—extend your brief or try different wording, then run again.</p>
           <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
         </section>
+        <div id="recents-section-slot-smart" class="recents-slot"></div>
         </div>
-
-        <section class="recents-section" id="recents-section" aria-labelledby="recents-heading">
-          <div class="recents-bar">
-            <h2 id="recents-heading" class="recents-title">Recents</h2>
-            <div class="recents-filters">
-              <button type="button" class="mini-select">Owner</button>
-              <button type="button" class="mini-select">Any type</button>
-            </div>
-          </div>
-          <div class="recents-grid" id="recents-grid"></div>
-        </section>
       </div>
+    </div>
+    <div id="recents-section-park" class="recents-park" hidden aria-hidden="true">
+      <section class="recents-section" id="recents-section" aria-labelledby="recents-heading">
+        <div class="recents-bar">
+          <h2 id="recents-heading" class="recents-title">Recents</h2>
+          <div class="recents-filters">
+            <button type="button" class="mini-select">Owner</button>
+            <button type="button" class="mini-select">Any type</button>
+          </div>
+        </div>
+        <div class="recents-grid" id="recents-grid"></div>
+      </section>
     </div>
   </div>
   <div id="smart-match-alert" class="smart-match-alert" hidden>
@@ -217,7 +217,7 @@
       aria-labelledby="sma-title"
     >
       <p class="smart-match-alert__badge">Smart Match</p>
-      <h3 id="sma-title" class="smart-match-alert__title">Strong similarity</h3>
+      <h3 id="sma-title" class="smart-match-alert__title">Close match</h3>
       <p class="smart-match-alert__sub" id="sma-sub"></p>
       <div class="smart-match-alert__compare">
         <figure class="smart-match-alert__fig">
@@ -225,7 +225,7 @@
           <div id="sma-yours" class="sma-thumb-wrap"></div>
         </figure>
         <figure class="smart-match-alert__fig">
-          <figcaption>Matched workspace file</figcaption>
+          <figcaption>Match</figcaption>
           <img id="sma-match-img" class="sma-match-img" alt="" width="280" height="200" />
         </figure>
       </div>

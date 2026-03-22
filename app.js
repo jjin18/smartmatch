@@ -35,6 +35,9 @@ let workspaceCacheItems = [];
 /** Recents category filter (`data-cat` value) or null = all. */
 let recentsActiveCategory = null;
 
+/** `designs` | `templates` | `smart` — title/category filters apply only on `templates`. */
+let currentHomeTab = "designs";
+
 /** Stand-in asset shown as “current design” on Your designs tab. */
 let currentDesignAsset = null;
 
@@ -158,20 +161,20 @@ async function refreshHealth() {
   try {
     const h = await (await fetch("/api/health")).json();
     if (!h.modelReady) {
-      setModelBadge("error", "Check server and data/workspace.json");
+      setModelBadge("error", "Check server · data/workspace.json");
       if (envHint) envHint.hidden = false;
       return;
     }
     const parts = [`${h.assetCount} assets`];
-    parts.push(h.llm ? `LLM: ${h.anthropicModel || "Claude"}` : "Local 4-signal scorer");
-    parts.push(h.embeddings ? `embeddings dim ${h.embeddingDim ?? "?"}` : "no embeddings (proxies)");
+    parts.push(h.llm ? `LLM: ${h.anthropicModel || "Claude"}` : "Local scorer");
+    parts.push(h.embeddings ? `embeddings ${h.embeddingDim ?? "?"}` : "no embeddings");
     if (h.envFileExists === false) {
-      parts.push("no .env file next to server.mjs");
+      parts.push("no .env");
     }
     setModelBadge(h.embeddings || h.llm ? "ready" : "warn", parts.join(" · "));
     if (envHint) envHint.hidden = true;
   } catch {
-    setModelBadge("error", "Run npm start and open this app in the browser");
+    setModelBadge("error", "Run npm start · open in browser");
     if (envHint) envHint.hidden = false;
   }
 }
@@ -185,7 +188,7 @@ function renderAssets(items) {
     const empty = document.createElement("p");
     empty.className = "recents-empty";
     empty.setAttribute("role", "status");
-    empty.textContent = "No designs match your title filter or category.";
+    empty.textContent = "No designs match filter or category.";
     recentsGrid.appendChild(empty);
     return;
   }
@@ -267,7 +270,11 @@ function recentsCategoryMatch(asset, category) {
 
 function getRecentsFilteredItems() {
   let items = workspaceCacheItems.slice();
-  const raw = globalSearch ? String(globalSearch.value).trim().toLowerCase() : "";
+  if (currentHomeTab !== "templates") {
+    return items;
+  }
+  const searchEl = globalSearch ?? document.getElementById("global-search");
+  const raw = searchEl ? String(searchEl.value).trim().toLowerCase() : "";
   if (raw) {
     items = items.filter((a) => String(a.name || a.title || "").toLowerCase().includes(raw));
   }
@@ -290,6 +297,36 @@ function applyRecentsFilters() {
   renderAssets(getRecentsFilteredItems());
 }
 
+/** Template-library rows only — thumbnails for the Templates tab. */
+function renderTemplatesBrowsePanel() {
+  const grid = document.getElementById("templates-browse-grid");
+  if (!grid) return;
+  const templates = workspaceCacheItems.filter((a) => String(a.status || "").toLowerCase().includes("template"));
+  grid.replaceChildren();
+  templates.forEach((a) => {
+    const art = document.createElement("article");
+    art.className = "templates-browse-card";
+    const name = escapeHtml(a.name || a.id || "Untitled");
+    const fmt = escapeHtml(designFormatLabel(a));
+    const thumb = a.thumbnail
+      ? `<div class="templates-browse-thumb"><img src="${escapeHtml(publicAssetUrl(a.thumbnail))}" alt="" width="200" height="150" loading="lazy" /></div>`
+      : `<div class="templates-browse-thumb templates-browse-thumb--ph" aria-hidden="true"></div>`;
+    art.innerHTML = `${thumb}
+      <div class="templates-browse-card-body">
+        <p class="templates-browse-card-name">${name}</p>
+        <p class="templates-browse-card-meta">${fmt}</p>
+      </div>`;
+    grid.appendChild(art);
+  });
+}
+
+function clearRecentsFilters() {
+  recentsActiveCategory = null;
+  const el = document.getElementById("global-search");
+  if (el) el.value = "";
+  syncRecentsCatPillUi();
+}
+
 /**
  * Summary under each Your designs card: top template + counts (matches come from /api/match-from-asset, template library only).
  * @param {object[]} matches
@@ -298,13 +335,13 @@ function formatYdSimilarSummaryHtml(matches) {
   const list = Array.isArray(matches) ? matches : [];
   const strong = list.filter((m) => typeof m.confidence === "number" && m.confidence >= YD_MATCH_LIST_MIN_CONFIDENCE);
   if (!strong.length) {
-    return "No similar templates yet · Smart Match (auto, like the brief tab without typing)";
+    return "No similar templates yet · auto-match (no brief typed)";
   }
   const top = strong[0];
   const n = strong.length;
   const topName = escapeHtml(top.name || top.id || "Template");
   const pct = YD_MATCH_FIRST_CARD_DISPLAY_SIMILARITY;
-  return `Closest template: <strong>${topName}</strong> <span class="yd-similar-pct">(${pct}%)</span> · <strong>${n}</strong> in range · details on the <span class="yd-powered">right</span>`;
+  return `Closest: <strong>${topName}</strong> <span class="yd-similar-pct">(${pct}%)</span> · <strong>${n}</strong> strong · see <span class="yd-powered">right</span>`;
 }
 
 function setYdSimilarLine(slotIdx, content, { asHtml = true } = {}) {
@@ -343,7 +380,7 @@ function renderYdMatchesPanel(matches, _sourceAsset) {
   }
 
   if (!ranked.length) {
-    summary.textContent = "No template matches yet. Check the server and try again.";
+    summary.textContent = "No matches yet · check server and retry.";
     list.replaceChildren();
     if (wrap) wrap.hidden = true;
     return;
@@ -352,7 +389,7 @@ function renderYdMatchesPanel(matches, _sourceAsset) {
   if (wrap) wrap.hidden = false;
 
   if (!eligible.length) {
-    summary.textContent = "No versions at high match yet.";
+    summary.textContent = "No high-confidence matches yet.";
     list.replaceChildren();
     return;
   }
@@ -379,7 +416,7 @@ function renderYdMatchesPanel(matches, _sourceAsset) {
           : YD_MATCH_CARD_DISPLAY_SIMILARITY;
     const reasonText = m.reasoning != null && String(m.reasoning).trim() ? String(m.reasoning).trim() : "";
     const reasonBlock = reasonText
-      ? `<p class="yd-match-card-reason"><span class="yd-match-card-reason-label">Why it’s similar:</span> ${escapeHtml(reasonText)}</p>`
+      ? `<p class="yd-match-card-reason"><span class="yd-match-card-reason-label">Why similar:</span> ${escapeHtml(reasonText)}</p>`
       : "";
     art.innerHTML = `${thumb}
       <div class="yd-match-card-body">
@@ -414,7 +451,7 @@ function annotationsHtml(m) {
   if (!Array.isArray(ann) || !ann.length) return "";
   const items = ann.map((line) => `<li>${escapeHtml(line)}</li>`).join("");
   return `<aside class="match-card-annotations" aria-label="Annotated regions and copy">
-    <p class="match-card-annotations-title">What’s in this design</p>
+    <p class="match-card-annotations-title">In this design</p>
     <ol class="match-card-annotations-list">${items}</ol>
   </aside>`;
 }
@@ -439,7 +476,7 @@ function signalBarsHtml(m) {
         <span class="match-signal-pct">${s[key]}%</span>
       </div>`,
   );
-  return `<div class="match-signal-bars" aria-label="Similarity by signal">${parts.join("")}</div>`;
+  return `<div class="match-signal-bars" aria-label="Scores by signal">${parts.join("")}</div>`;
 }
 
 async function loadWorkspaceList() {
@@ -449,9 +486,11 @@ async function loadWorkspaceList() {
     const items = await r.json();
     workspaceCacheItems = items;
     applyRecentsFilters();
+    renderTemplatesBrowsePanel();
   } catch {
     workspaceCacheItems = [];
     applyRecentsFilters();
+    renderTemplatesBrowsePanel();
   }
 }
 
@@ -469,7 +508,7 @@ function fillYdSlot(idx, asset) {
   if (!ydName || !ydImg || !ydFb || !slotEl) return;
   slotEl.hidden = false;
   ydName.textContent = asset.name || asset.id || "Untitled";
-  setYdSimilarLine(idx, "Checking similarity to templates…", { asHtml: false });
+  setYdSimilarLine(idx, "Finding similar templates…", { asHtml: false });
   if (asset.thumbnail) {
     ydImg.src = publicAssetUrl(asset.thumbnail);
     ydImg.alt = asset.name || "";
@@ -487,7 +526,7 @@ async function initYourDesignsPreview() {
 
   if (!workspaceCacheItems.length) {
     const n0 = document.getElementById("yd-name-0");
-    if (n0) n0.textContent = "Couldn’t load workspace";
+    if (n0) n0.textContent = "Couldn’t load workspace.";
     clearYdSimilarLines();
     return;
   }
@@ -527,14 +566,14 @@ async function initYourDesignsPreview() {
 
   fillYdSlot(0, picks[0]);
   const ydSum = document.getElementById("yd-matches-summary");
-  if (ydSum) ydSum.textContent = "Comparing to the template library…";
+  if (ydSum) ydSum.textContent = "Matching to template library…";
   document.getElementById("yd-match-list")?.replaceChildren();
   const ydWrap = document.getElementById("yd-match-list-wrap");
   if (ydWrap) ydWrap.hidden = true;
 
   if (hint) {
     hint.hidden = false;
-    hint.textContent = "Checking this tab for similar files in your workspace…";
+    hint.textContent = "Finding similar files…";
   }
 }
 
@@ -558,7 +597,7 @@ async function pollYourDesignsForSimilarity() {
     hadError = true;
     const msg =
       typeof e === "object" && e !== null && "message" in e && String(e.message).includes("Failed to fetch")
-        ? "Couldn’t load similarity — run npm start and open http://localhost:3000 (not this file directly)."
+        ? "Couldn’t load similarity · run npm start and open http://localhost:3000"
         : e instanceof Error
           ? e.message
           : "Couldn’t load similarity";
@@ -580,6 +619,8 @@ function startYourDesignsPolling() {
 }
 
 function setHomeView(tab) {
+  currentHomeTab = tab;
+
   const vDesigns = document.getElementById("view-designs");
   const vTemplates = document.getElementById("view-templates");
   const vSmart = document.getElementById("view-smart");
@@ -591,10 +632,22 @@ function setHomeView(tab) {
   else if (vSmart) vSmart.hidden = false;
 
   const recentsSection = document.getElementById("recents-section");
+  const slotTemplates = document.getElementById("recents-section-slot-templates");
+  const slotSmart = document.getElementById("recents-section-slot-smart");
+  /** Off-screen host when “Your designs” is active — not under #view-designs. */
+  const slotPark = document.getElementById("recents-section-park");
+  if (recentsSection && slotTemplates && slotSmart && slotPark) {
+    if (tab === "templates") slotTemplates.appendChild(recentsSection);
+    else if (tab === "smart") slotSmart.appendChild(recentsSection);
+    else slotPark.appendChild(recentsSection);
+  }
+
   const recentsRail = document.getElementById("recents-rail");
-  const hideRecents = tab === "designs";
-  if (recentsSection) recentsSection.hidden = hideRecents;
-  if (recentsRail) recentsRail.hidden = hideRecents;
+  if (recentsRail) recentsRail.hidden = true;
+
+  if (tab !== "templates") {
+    clearRecentsFilters();
+  }
 
   document.querySelectorAll("[data-home-tab]").forEach((btn) => {
     const active = btn.getAttribute("data-home-tab") === tab;
@@ -604,7 +657,8 @@ function setHomeView(tab) {
 
   document.querySelectorAll("[data-nav-tab]").forEach((btn) => {
     const navTab = btn.getAttribute("data-nav-tab");
-    const active = navTab === tab;
+    const isProjects = btn.getAttribute("data-nav-projects") === "true";
+    const active = navTab === tab && (tab !== "designs" || isProjects);
     btn.classList.toggle("is-active", active);
   });
 
@@ -613,6 +667,11 @@ function setHomeView(tab) {
   } else {
     stopYourDesignsPolling();
   }
+
+  if (workspaceCacheItems.length) {
+    applyRecentsFilters();
+  }
+  renderTemplatesBrowsePanel();
 }
 
 function closeSmartMatchAlert() {
@@ -631,7 +690,7 @@ function openSmartMatchAlert(match, sourceAsset) {
   const yours = document.getElementById("sma-yours");
   if (!el || !sub || !meta || !mimg || !yours) return;
 
-  sub.textContent = `Strong match (${match.confidence}% similarity).`;
+  sub.textContent = `Close match · ${match.confidence}%`;
   meta.textContent = [match.name, recentsOwnerLabel(match, 0), match.status].filter(Boolean).join(" · ");
 
   if (match.thumbnail) {
@@ -712,7 +771,7 @@ function renderMatches(data) {
 
   if (matchTrimHint) {
     if (all.length > MAX_VISIBLE_MATCHES) {
-      matchTrimHint.textContent = `Showing top ${MAX_VISIBLE_MATCHES} of ${all.length} by combined similarity—edit your brief and run again to refresh.`;
+      matchTrimHint.textContent = `Top ${MAX_VISIBLE_MATCHES} of ${all.length} · edit brief and re-run to refresh.`;
       matchTrimHint.hidden = false;
     } else {
       matchTrimHint.hidden = true;
@@ -722,8 +781,8 @@ function renderMatches(data) {
   if (source) {
     source.textContent =
       data.source === "claude"
-        ? "Claude ranked these from your brief (semantic fit—not keyword search)."
-        : "Local mode: embeddings + keywords + color + visual scores (see bars below).";
+        ? "Claude ranked from your brief (semantic, not keyword search)."
+        : "Local: meaning · keywords · color · layout (see bars).";
   }
   if (!list) return;
   list.replaceChildren();
@@ -742,7 +801,7 @@ function renderMatches(data) {
       <span class="asset-format-pill">${escapeHtml(designFormatLabel(m))}</span>
       <div class="match-card-head">
         <span class="match-card-title">${escapeHtml(m.name || m.id)}</span>
-        <span class="match-card-score" title="Combined similarity">${escapeHtml(String(m.confidence))}%</span>
+        <span class="match-card-score" title="Similarity">${escapeHtml(String(m.confidence))}%</span>
       </div>
       <p class="match-card-owner-line">Owner: <strong>${escapeHtml(recentsOwnerLabel(m, idx))}</strong></p>
       <p class="match-card-meta">${escapeHtml(m.status || "")}</p>
@@ -753,8 +812,8 @@ function renderMatches(data) {
       <div class="match-card-signals">${signals}</div>
       <div class="match-card-actions match-card-actions--collab-first">
         <button type="button" class="btn btn-gradient match-act btn-collab-wide" data-match-action="collab">Collaborate</button>
-        <button type="button" class="btn btn-outline match-act" data-match-action="duplicate">Use as starting point</button>
-        <button type="button" class="btn btn-ghost match-act" data-match-action="new">Create new anyway</button>
+        <button type="button" class="btn btn-outline match-act" data-match-action="duplicate">Start from this</button>
+        <button type="button" class="btn btn-ghost match-act" data-match-action="new">New design</button>
       </div>`;
     el.querySelectorAll(".match-act").forEach((btn) => {
       btn.dataset.assetId = m.id;
@@ -782,13 +841,15 @@ function openMatchActionModal(action, asset) {
   let desc = "";
   if (action === "collab") {
     title = "Collaborate";
-    desc = `Opens “${safe(name)}” in the editor with comments and live collaboration. (Demo — no file is opened.)`;
+    const owner = asset ? recentsOwnerLabel(asset, 0) : "—";
+    const who = owner && owner !== "—" ? owner : "the owner";
+    desc = `We’ll notify ${who}, then open “${safe(name)}” for comments and live collaboration.`;
   } else if (action === "duplicate") {
-    title = "Use as starting point";
-    desc = `Creates a new file duplicated from “${safe(name)}” so you can edit without changing the original. (Demo)`;
+    title = "Start from this";
+    desc = `Copy “${safe(name)}” to a new file—original stays unchanged. (Demo)`;
   } else {
-    title = "Create new anyway";
-    desc = `Starts a blank design instead of using “${safe(name)}”. (Demo)`;
+    title = "New design";
+    desc = `Blank canvas instead of “${safe(name)}”. (Demo)`;
   }
   matchModalTitle.textContent = title;
   matchModalDesc.textContent = desc;
@@ -843,6 +904,10 @@ document.querySelectorAll("[data-nav-tab]").forEach((btn) => {
     const tab = btn.getAttribute("data-nav-tab");
     if (tab) setHomeView(tab);
   });
+});
+
+document.getElementById("nav-rail-home")?.addEventListener("click", () => {
+  setHomeView("designs");
 });
 
 function goToSmartMatchEntry() {
@@ -900,7 +965,7 @@ scanBtn.addEventListener("click", async () => {
 
   scanBtn.disabled = true;
   scanHint.hidden = false;
-  scanHint.textContent = "Scoring meaning, keywords, color, and layout against your workspace…";
+  scanHint.textContent = "Matching your brief to the workspace…";
   matchSection.hidden = true;
   toast.hidden = true;
 
@@ -919,9 +984,9 @@ scanBtn.addEventListener("click", async () => {
     const msg =
       e instanceof Error
         ? e.message
-        : "Request failed. Use npm start and open http://localhost:3000";
+        : "Request failed · npm start → http://localhost:3000";
     showToast(msg);
-    setModelBadge("error", "Match request failed — see toast");
+    setModelBadge("error", "Match failed · see message");
   } finally {
     scanBtn.disabled = false;
   }
@@ -930,19 +995,25 @@ scanBtn.addEventListener("click", async () => {
 refreshHealth();
 setInterval(refreshHealth, 15000);
 
-document.querySelectorAll(".cat-pill[data-cat]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const cat = btn.getAttribute("data-cat");
-    if (!cat) return;
-    recentsActiveCategory = recentsActiveCategory === cat ? null : cat;
-    syncRecentsCatPillUi();
-    applyRecentsFilters();
-  });
-});
-
-globalSearch?.addEventListener("input", () => {
+document.getElementById("templates-category-row")?.addEventListener("click", (e) => {
+  const btn = e.target && e.target.closest && e.target.closest("button[data-cat]");
+  if (!btn) return;
+  const cat = btn.getAttribute("data-cat");
+  if (!cat) return;
+  recentsActiveCategory = recentsActiveCategory === cat ? null : cat;
+  syncRecentsCatPillUi();
   applyRecentsFilters();
 });
+
+function bindRecentsSearchInput() {
+  const el = document.getElementById("global-search");
+  if (!el || el.dataset.recentsBound === "1") return;
+  el.dataset.recentsBound = "1";
+  el.addEventListener("input", applyRecentsFilters);
+  el.addEventListener("search", applyRecentsFilters);
+}
+
+bindRecentsSearchInput();
 
 (async function bootHome() {
   await loadWorkspaceList();

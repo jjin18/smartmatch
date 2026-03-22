@@ -4,11 +4,12 @@
 import dotenv from "dotenv";
 import express from "express";
 import { existsSync, mkdirSync, readFileSync } from "fs";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
+import { dirname, join, resolve } from "path";
+import { fileURLToPath, pathToFileURL } from "url";
 import { SMART_MATCH_SYSTEM, buildUserPrompt } from "./lib/smartmatch-prompt.mjs";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, ".env") });
 
 const PORT = Number(process.env.PORT) || 3000;
@@ -553,15 +554,23 @@ app.post("/api/match", async (req, res) => {
   }
 });
 
-app.listen(PORT, async () => {
-  console.log(`\n  Smart Match → http://localhost:${PORT}`);
-  console.log("  ANTHROPIC_API_KEY:", anthropicApiKey() ? "set (Claude)" : "not set (local scoring)");
-  console.log("  .env path:", join(__dirname, ".env"));
-  console.log("");
-  try {
-    await loadEmbeddings();
-  } catch (e) {
-    embeddingError = e?.message ?? String(e);
-    console.error("Embedding load failed (local matcher will use keyword proxies):", embeddingError);
-  }
-});
+/** True when started with `node server.mjs` (not when imported by Vercel’s serverless handler). */
+const runAsScript =
+  Boolean(process.argv[1]) && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+
+export default app;
+
+if (runAsScript) {
+  app.listen(PORT, async () => {
+    console.log(`\n  Smart Match → http://localhost:${PORT}`);
+    console.log("  ANTHROPIC_API_KEY:", anthropicApiKey() ? "set (Claude)" : "not set (local scoring)");
+    console.log("  .env path:", join(__dirname, ".env"));
+    console.log("");
+    try {
+      await loadEmbeddings();
+    } catch (e) {
+      embeddingError = e?.message ?? String(e);
+      console.error("Embedding load failed (local matcher will use keyword proxies):", embeddingError);
+    }
+  });
+}
