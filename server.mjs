@@ -4,6 +4,8 @@
 import dotenv from "dotenv";
 import express from "express";
 import { existsSync, mkdirSync, readFileSync } from "fs";
+import { Jimp, intToRGBA } from "jimp";
+import multer from "multer";
 import { dirname, join, resolve } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { SMART_MATCH_SYSTEM, buildUserPrompt } from "./lib/smartmatch-prompt.mjs";
@@ -29,6 +31,64 @@ function anthropicApiKey() {
 const app = express();
 app.use(express.json({ limit: "512kb" }));
 app.use(express.static(__dirname));
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024 },
+});
+
+/** Map sampled RGB to loose color vocabulary (feeds the same matcher as text briefs). */
+function rgbToColorWords(r, g, b) {
+  const rn = r / 255;
+  const gn = g / 255;
+  const bn = b / 255;
+  const max = Math.max(rn, gn, bn);
+  const min = Math.min(rn, gn, bn);
+  const l = (max + min) / 2;
+  const d = max - min;
+  let h = 0;
+  if (d > 0.02) {
+    if (max === rn) h = ((gn - bn) / d) % 6;
+    else if (max === gn) h = (bn - rn) / d + 2;
+    else h = (rn - gn) / d + 4;
+  }
+  h *= 60;
+  if (h < 0) h += 360;
+  const s = max === 0 ? 0 : d / max;
+  const out = [];
+  if (l < 0.12) out.push("black", "dark");
+  else if (l > 0.9) out.push("white", "bright");
+  else {
+    if (s < 0.12) out.push("gray", "muted");
+    else {
+      if (h < 22 || h >= 345) out.push("red");
+      else if (h < 48) out.push("orange");
+      else if (h < 75) out.push("yellow", "gold");
+      else if (h < 155) out.push("green", "lime");
+      else if (h < 200) out.push("cyan", "teal");
+      else if (h < 255) out.push("blue", "navy");
+      else if (h < 300) out.push("purple", "violet");
+      else out.push("pink", "magenta");
+    }
+  }
+  if (s > 0.35 && l > 0.3 && l < 0.75) out.push("pastel");
+  return [...new Set(out)];
+}
+
+async function extractPaletteWords(buffer) {
+  const image = await Jimp.read(buffer);
+  image.resize({ w: 48, h: 48 });
+  const words = [];
+  const w = image.width;
+  const h = image.height;
+  for (let y = 0; y < h; y += 2) {
+    for (let x = 0; x < w; x += 2) {
+      const { r, g, b } = intToRGBA(image.getPixelColor(x, y));
+      words.push(...rgbToColorWords(r, g, b));
+    }
+  }
+  return [...new Set(words)].slice(0, 16);
+}
 
 const rawAssets = JSON.parse(readFileSync(DATA_PATH, "utf8"));
 
@@ -487,6 +547,8 @@ app.get("/api/health", (_req, res) => {
   const hasKey = Boolean(key);
   res.json({
     ok: true,
+    /** Client uses this to detect an outdated server still bound to the port. */
+    matchFromImage: true,
     modelReady: assets.length > 0,
     assetCount: assets.length,
     llm: hasKey,
@@ -497,6 +559,47 @@ app.get("/api/health", (_req, res) => {
     hint: hasKey ? null : "Set ANTHROPIC_API_KEY for Claude Smart Match; otherwise local 4-signal scoring is used.",
     envFileExists: existsSync(join(__dirname, ".env")),
   });
+});
+
+app.post("/api/match-from-image", upload.single("image"), async (req, res) => {
+  try {
+    if (!req.file?.buffer) {
+      res.status(400).json({ error: "No image file", matches: [] });
+      return;
+    }
+    if (!assets.length) {
+      res.status(400).json({ error: "No assets in data/workspace.json", matches: [] });
+      return;
+    }
+    let paletteWords;
+    try {
+      paletteWords = await extractPaletteWords(req.file.buffer);
+    } catch (e) {
+      res.status(400).json({ error: "Could not read image (try JPEG, PNG, WebP, or GIF).", matches: [] });
+      return;
+    }
+    const note = String(req.body?.query ?? "").trim();
+    const fname = req.file.originalname || "upload";
+    const query = [
+      `Uploaded design image "${fname}"`,
+      `Dominant palette and mood: ${paletteWords.join(", ")}`,
+      note || "Find layouts and designs with similar visual style, color, and composition in the workspace.",
+    ].join(". ");
+    const out = await matchLocalFourSignals(query);
+    const payload = {
+      ...out,
+      source: "local-upload",
+      paletteHints: paletteWords,
+    };
+    if (anthropicApiKey()) {
+      payload.warning =
+        "Image uploads use the local matcher (color + layout signals). Add a text brief and use Find similar without upload for Claude ranking.";
+    }
+    res.json(payload);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err?.message ?? String(err), matches: [] });
+  }
 });
 
 app.post("/api/match-from-asset", async (req, res) => {

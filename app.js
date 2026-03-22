@@ -14,8 +14,15 @@ const matchModal = document.getElementById("match-modal");
 const matchModalTitle = document.getElementById("match-modal-title");
 const matchModalDesc = document.getElementById("match-modal-desc");
 const matchTrimHint = document.getElementById("match-trim-hint");
+const uploadAssetPanel = document.getElementById("upload-asset-panel");
+const uploadAssetInput = document.getElementById("upload-asset-input");
+const uploadAssetPreview = document.getElementById("upload-asset-preview");
+const uploadAssetPreviewImg = document.getElementById("upload-asset-preview-img");
 
 let activeTrigger = "design";
+/** @type {File | null} */
+let smartMatchUploadFile = null;
+let uploadPreviewObjectUrl = null;
 
 /** Only show the strongest matches so the list stays short. */
 const MAX_VISIBLE_MATCHES = 5;
@@ -99,7 +106,7 @@ let workspaceCacheItems = [];
 let recentsActiveCategory = null;
 
 /** `designs` | `templates` | `smart` — title/category filters apply only on `templates`. */
-let currentHomeTab = "designs";
+let currentHomeTab = "smart";
 
 /** Stand-in asset shown as “current design” on Your designs tab. */
 let currentDesignAsset = null;
@@ -233,6 +240,9 @@ async function refreshHealth() {
     parts.push(h.embeddings ? `embeddings ${h.embeddingDim ?? "?"}` : "no embeddings");
     if (h.envFileExists === false) {
       parts.push("no .env");
+    }
+    if (h.matchFromImage !== true) {
+      parts.push("restart server for image upload");
     }
     setModelBadge(h.embeddings || h.llm ? "ready" : "warn", parts.join(" · "));
     if (envHint) envHint.hidden = true;
@@ -869,11 +879,45 @@ globalSearch?.addEventListener("keydown", (e) => {
   }
 });
 
+function syncUploadPanelVisibility() {
+  if (!uploadAssetPanel) return;
+  uploadAssetPanel.hidden = activeTrigger !== "upload";
+}
+
 triggers.forEach((btn) => {
   btn.addEventListener("click", () => {
-    activeTrigger = btn.dataset.trigger;
+    activeTrigger = btn.dataset.trigger || "design";
     triggers.forEach((b) => b.classList.toggle("is-active", b === btn));
+    syncUploadPanelVisibility();
   });
+});
+syncUploadPanelVisibility();
+
+uploadAssetInput?.addEventListener("change", () => {
+  const f = uploadAssetInput.files?.[0];
+  smartMatchUploadFile = f || null;
+  if (uploadPreviewObjectUrl) {
+    URL.revokeObjectURL(uploadPreviewObjectUrl);
+    uploadPreviewObjectUrl = null;
+  }
+  if (f && uploadAssetPreviewImg && uploadAssetPreview) {
+    uploadPreviewObjectUrl = URL.createObjectURL(f);
+    uploadAssetPreviewImg.src = uploadPreviewObjectUrl;
+    uploadAssetPreview.hidden = false;
+  } else if (uploadAssetPreview) {
+    uploadAssetPreview.hidden = true;
+  }
+});
+
+document.getElementById("upload-asset-clear")?.addEventListener("click", () => {
+  smartMatchUploadFile = null;
+  if (uploadAssetInput) uploadAssetInput.value = "";
+  if (uploadPreviewObjectUrl) {
+    URL.revokeObjectURL(uploadPreviewObjectUrl);
+    uploadPreviewObjectUrl = null;
+  }
+  if (uploadAssetPreviewImg) uploadAssetPreviewImg.removeAttribute("src");
+  if (uploadAssetPreview) uploadAssetPreview.hidden = true;
 });
 
 function showToast(message) {
@@ -899,10 +943,13 @@ function renderMatches(data) {
   }
 
   if (source) {
-    source.textContent =
-      data.source === "claude"
-        ? "Claude ranked from your brief (semantic, not keyword search)."
-        : "Local: meaning · keywords · color · layout (see bars).";
+    if (data.source === "claude") {
+      source.textContent = "Claude ranked from your brief (semantic, not keyword search).";
+    } else if (data.source === "local-upload") {
+      source.textContent = "Uploaded image: palette + layout signals vs workspace (local matcher).";
+    } else {
+      source.textContent = "Local: meaning · keywords · color · layout (see bars).";
+    }
   }
   if (!list) return;
   list.replaceChildren();
@@ -1052,9 +1099,9 @@ document.getElementById("match-modal-primary")?.addEventListener("click", () => 
 document.getElementById("design-preview-close")?.addEventListener("click", closeDesignPreview);
 document.querySelector("[data-close-design-preview]")?.addEventListener("click", closeDesignPreview);
 
-document.querySelectorAll(".nav-collab-btn").forEach((btn) => {
+document.querySelectorAll(".nav-team-avatar").forEach((btn) => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".nav-collab-btn").forEach((b) => b.classList.remove("is-active"));
+    document.querySelectorAll(".nav-team-avatar").forEach((b) => b.classList.remove("is-active"));
     btn.classList.add("is-active");
   });
 });
@@ -1142,6 +1189,27 @@ async function matchWithApi(query) {
   return body;
 }
 
+/**
+ * @param {File} file
+ * @param {string} queryExtra — optional brief text combined with image-derived palette
+ */
+async function matchWithImageApi(file, queryExtra) {
+  const fd = new FormData();
+  fd.append("image", file, file.name);
+  if (queryExtra) fd.append("query", queryExtra);
+  const res = await fetch("/api/match-from-image", { method: "POST", body: fd });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    if (res.status === 404) {
+      throw new Error(
+        "Image match API not found (404). Another app may be using this port — stop it, run npm start from the smartmatch folder, then refresh the page.",
+      );
+    }
+    throw new Error(body.error || res.statusText || "Match failed");
+  }
+  return body;
+}
+
 async function matchFromAssetApi(assetId) {
   const res = await fetch("/api/match-from-asset", {
     method: "POST",
@@ -1157,19 +1225,31 @@ async function matchFromAssetApi(assetId) {
 
 scanBtn.addEventListener("click", async () => {
   const text = description.value.trim();
-  if (!text) {
+  const isUpload = activeTrigger === "upload";
+
+  if (isUpload) {
+    if (!smartMatchUploadFile) {
+      showToast("Choose an image to upload first.");
+      uploadAssetInput?.focus();
+      return;
+    }
+  } else if (!text) {
     description.focus();
     return;
   }
 
   scanBtn.disabled = true;
   scanHint.hidden = false;
-  scanHint.textContent = "Matching your brief to the workspace…";
+  scanHint.textContent = isUpload
+    ? "Reading image and matching the workspace…"
+    : "Matching your brief to the workspace…";
   matchSection.hidden = true;
   toast.hidden = true;
 
   try {
-    const result = await matchWithApi(text);
+    const result = isUpload
+      ? await matchWithImageApi(smartMatchUploadFile, text)
+      : await matchWithApi(text);
     if (result.warning) {
       showToast(result.warning);
     }
@@ -1218,5 +1298,5 @@ bindRecentsSearchInput();
   await loadWorkspaceList();
   syncRecentsCatPillUi();
   renderCollabActivityUi();
-  setHomeView("designs");
+  setHomeView("smart");
 })();

@@ -10,6 +10,8 @@
     "@xenova/transformers": "^2.17.2",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
+    "jimp": "^1.6.0",
+    "multer": "^2.1.1",
     "onnxruntime-node": "1.14.0"
   }
 }
