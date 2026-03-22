@@ -679,14 +679,23 @@ body {
   background: #f8fafc;
   width: 100%;
   max-width: 100%;
-  aspect-ratio: 4/3;
   position: relative;
+  line-height: 0;
+}
+
+/* Placeholder / loading: fixed ratio when image not shown */
+.yd-current-frame:not(:has(.yd-current-img:not([hidden]))) {
+  aspect-ratio: 4 / 3;
+  min-height: 200px;
 }
 
 .yd-current-img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  height: auto;
+  max-height: min(65vh, 620px);
+  object-fit: contain;
+  object-position: top center;
   display: block;
 }
 
