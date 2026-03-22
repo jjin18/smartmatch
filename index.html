@@ -110,6 +110,7 @@
               </aside>
             </div>
             <p class="hint yd-auto-hint" id="yd-auto-hint" hidden></p>
+            <p class="collab-activity-strip" id="collab-activity-strip" hidden role="status"></p>
           </section>
         </div>
 
@@ -140,7 +141,7 @@
               <button type="button" class="cat-pill" data-cat="video" aria-pressed="false">Video</button>
               <button type="button" class="cat-pill" data-cat="print" aria-pressed="false">Print</button>
             </div>
-            <p class="templates-placeholder">Use chips or <button type="button" class="templates-smart-link"><strong>Smart Match</strong></button> to describe what you need.</p>
+            <p class="templates-placeholder">Use <button type="button" class="templates-smart-link"><strong>Smart Match</strong></button> to compare with what others are doing.</p>
             <div id="templates-browse-grid" class="templates-browse-grid" aria-label="Template thumbnails"></div>
             <div id="recents-section-slot-templates" class="recents-slot"></div>
           </section>
@@ -149,10 +150,10 @@
         <div id="view-smart" class="home-view" hidden>
         <section class="panel smart-panel" id="flow">
           <div class="panel-head">
-            <p class="smart-panel-eyebrow">Collaborate with others</p>
             <h2 class="panel-title">Smart Match</h2>
             <p class="panel-sub">
-              Describe what you’re making in a <strong>brief</strong>. Smart Match ranks workspace files by <strong>meaning</strong>, <strong>keywords</strong>, <strong>color</strong>, and <strong>layout</strong>—not plain text search—so you can jump into <strong>similar work</strong> and collaborate instead of starting cold.
+              <strong>Give context, get comparisons, start collaborating.</strong>
+              Rankings use <strong>meaning</strong>, <strong>keywords</strong>, and <strong>visual elements</strong>—color, layout, and more—not plain text search.
             </p>
           </div>
 
@@ -240,18 +241,19 @@
   <div id="match-modal" class="match-modal" hidden>
     <div class="match-modal__backdrop" data-close-match-modal tabindex="-1"></div>
     <div
-      class="match-modal__dialog"
+      class="match-modal__dialog match-modal__dialog--wide"
       role="dialog"
       aria-modal="true"
       aria-labelledby="match-modal-title"
     >
       <h3 id="match-modal-title" class="match-modal__title"></h3>
       <p id="match-modal-desc" class="match-modal__desc"></p>
-      <div class="match-modal__footer">
-        <button type="button" class="btn btn-outline" id="match-modal-collab" hidden>
-          Collaborate
-        </button>
-        <button type="button" class="btn btn-primary match-modal__ok" id="match-modal-close">OK</button>
+      <div id="match-modal-preview" class="match-modal__preview" hidden>
+        <img id="match-modal-preview-img" class="match-modal__preview-img" alt="" width="400" height="240" />
+      </div>
+      <div class="match-modal__footer match-modal__footer--stack">
+        <button type="button" class="btn btn-primary" id="match-modal-primary" hidden></button>
+        <button type="button" class="btn btn-outline" id="match-modal-close">Close</button>
       </div>
     </div>
   </div>

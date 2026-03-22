@@ -29,6 +29,69 @@ let lastModalAction = null;
 /** Asset for the open match modal (for switching to Collaborate). */
 let modalContextAsset = null;
 
+const COLLAB_ACTIVITY_KEY = "smartmatch_collab_activity_v1";
+
+/** @typedef {{ kind: "collab"|"fork", owner: string, name: string, id: string, at: number }} CollabActivityRow */
+
+function readCollabActivity() {
+  try {
+    const raw = sessionStorage.getItem(COLLAB_ACTIVITY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeCollabActivity(rows) {
+  sessionStorage.setItem(COLLAB_ACTIVITY_KEY, JSON.stringify(rows.slice(-30)));
+}
+
+function renderCollabActivityUi() {
+  const items = readCollabActivity();
+  const wrap = document.getElementById("collab-activity");
+  const ul = document.getElementById("collab-activity-list");
+  const strip = document.getElementById("collab-activity-strip");
+  if (!items.length) {
+    if (wrap) wrap.hidden = true;
+    if (strip) strip.hidden = true;
+    return;
+  }
+  const line = (x) => {
+    const t = new Date(x.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    if (x.kind === "collab") return `${t} · To ${x.owner}: opened “${x.name}” (collaboration)`;
+    return `${t} · To ${x.owner}: “${x.name}” used as starting point`;
+  };
+  if (ul && wrap) {
+    ul.replaceChildren();
+    items.slice(0, 8).forEach((x) => {
+      const li = document.createElement("li");
+      li.textContent = line(x);
+      ul.appendChild(li);
+    });
+    wrap.hidden = false;
+  }
+  if (strip) {
+    strip.textContent = `Last: ${line(items[0])}`;
+    strip.hidden = false;
+  }
+}
+
+/**
+ * @param {"collab"|"fork"} kind
+ * @param {object} asset
+ */
+function recordCollabActivity(kind, asset) {
+  const name = asset?.name || asset?.id || "Untitled";
+  const o = asset ? recentsOwnerLabel(asset, 0) : "—";
+  const owner = o && o !== "—" ? o : "Owner";
+  const rows = readCollabActivity();
+  rows.unshift({ kind, owner, name, id: String(asset?.id ?? ""), at: Date.now() });
+  writeCollabActivity(rows);
+  renderCollabActivityUi();
+}
+
 /** Cached /api/assets for “Your designs” random preview. */
 let workspaceCacheItems = [];
 
@@ -359,6 +422,20 @@ function clearYdSimilarLines() {
 function publicAssetUrl(path) {
   if (!path) return "";
   return `/${String(path).replace(/^\/+/, "")}`;
+}
+
+/** @returns {boolean} true if a tab was opened */
+function openAssetInNewTab(asset) {
+  const path = asset?.thumbnail;
+  if (!path) return false;
+  try {
+    const rel = publicAssetUrl(path);
+    const url = new URL(rel, window.location.origin).href;
+    const w = window.open(url, "_blank", "noopener,noreferrer");
+    return Boolean(w);
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -823,6 +900,15 @@ function renderMatches(data) {
 }
 
 function closeMatchModal() {
+  const previewWrap = document.getElementById("match-modal-preview");
+  const previewImg = document.getElementById("match-modal-preview-img");
+  if (previewImg) {
+    previewImg.removeAttribute("src");
+    previewImg.alt = "";
+  }
+  if (previewWrap) previewWrap.hidden = true;
+  const primaryBtn = document.getElementById("match-modal-primary");
+  if (primaryBtn) primaryBtn.hidden = true;
   if (matchModal) matchModal.hidden = true;
   if (lastModalAction === "new" && matchSection) {
     matchSection.hidden = true;
@@ -837,32 +923,74 @@ function openMatchActionModal(action, asset) {
   lastModalAction = action;
   const name = asset?.name || asset?.id || "this design";
   const safe = (s) => String(s);
-  let title = "";
-  let desc = "";
+  const previewWrap = document.getElementById("match-modal-preview");
+  const previewImg = document.getElementById("match-modal-preview-img");
+  const primaryBtn = document.getElementById("match-modal-primary");
+
+  if (previewWrap) previewWrap.hidden = true;
+  if (previewImg) {
+    previewImg.removeAttribute("src");
+    previewImg.alt = "";
+  }
+
+  const owner = asset ? recentsOwnerLabel(asset, 0) : "—";
+  const ownerStrong = owner && owner !== "—" ? `<strong>${escapeHtml(owner)}</strong>` : "the owner";
+
   if (action === "collab") {
-    title = "Collaborate";
-    const owner = asset ? recentsOwnerLabel(asset, 0) : "—";
-    const who = owner && owner !== "—" ? owner : "the owner";
-    desc = `We’ll notify ${who}, then open “${safe(name)}” for comments and live collaboration.`;
+    matchModalTitle.textContent = "Collaborate";
+    matchModalDesc.innerHTML = `${ownerStrong} is notified when you join this file. The workspace asset opens in a new tab so you can review and collaborate in context.`;
+    if (asset?.thumbnail && previewImg && previewWrap) {
+      previewImg.src = publicAssetUrl(asset.thumbnail);
+      previewImg.alt = safe(name);
+      previewWrap.hidden = false;
+    }
+    if (primaryBtn) {
+      primaryBtn.hidden = false;
+      primaryBtn.textContent = "Notify owner & open asset";
+    }
   } else if (action === "duplicate") {
-    title = "Start from this";
-    desc = `Copy “${safe(name)}” to a new file—original stays unchanged. (Demo)`;
+    matchModalTitle.textContent = "Starting point";
+    matchModalDesc.innerHTML = `${ownerStrong} is notified when copies are created from this design. Open the asset to confirm layout before your fork.`;
+    if (asset?.thumbnail && previewImg && previewWrap) {
+      previewImg.src = publicAssetUrl(asset.thumbnail);
+      previewImg.alt = safe(name);
+      previewWrap.hidden = false;
+    }
+    if (primaryBtn) {
+      primaryBtn.hidden = false;
+      primaryBtn.textContent = "Notify owner & open source";
+    }
   } else {
-    title = "New design";
-    desc = `Blank canvas instead of “${safe(name)}”. (Demo)`;
+    matchModalTitle.textContent = "New design";
+    matchModalDesc.textContent = `Blank canvas instead of “${safe(name)}”.`;
+    if (primaryBtn) primaryBtn.hidden = true;
   }
-  matchModalTitle.textContent = title;
-  matchModalDesc.textContent = desc;
-  const collabBtn = document.getElementById("match-modal-collab");
-  if (collabBtn) {
-    collabBtn.hidden = action === "collab";
-  }
+
   matchModal.hidden = false;
 }
 
-document.getElementById("match-modal-collab")?.addEventListener("click", () => {
-  if (!modalContextAsset) return;
-  openMatchActionModal("collab", modalContextAsset);
+document.getElementById("match-modal-primary")?.addEventListener("click", () => {
+  const asset = modalContextAsset;
+  const action = lastModalAction;
+  if (!asset || !action || action === "new") return;
+  const o = recentsOwnerLabel(asset, 0);
+  const ownerDisp = o && o !== "—" ? o : "Owner";
+  const label = asset.name || asset.id || "design";
+  const hasFile = Boolean(asset.thumbnail);
+  if (action === "collab") {
+    recordCollabActivity("collab", asset);
+    const opened = hasFile ? openAssetInNewTab(asset) : false;
+    if (!hasFile) showToast(`Notified ${ownerDisp} · no preview file on this asset`);
+    else if (!opened) showToast(`Notified ${ownerDisp} · allow pop-ups to open “${label}”`);
+    else showToast(`Notified ${ownerDisp} · opened “${label}”`);
+  } else if (action === "duplicate") {
+    recordCollabActivity("fork", asset);
+    const opened = hasFile ? openAssetInNewTab(asset) : false;
+    if (!hasFile) showToast(`Notified ${ownerDisp} · fork logged (no preview file)`);
+    else if (!opened) showToast(`Notified ${ownerDisp} · allow pop-ups to view source`);
+    else showToast(`Notified ${ownerDisp} · starting point · “${label}”`);
+  }
+  closeMatchModal();
 });
 
 function handleMatchListActionClick(e) {
@@ -1018,5 +1146,6 @@ bindRecentsSearchInput();
 (async function bootHome() {
   await loadWorkspaceList();
   syncRecentsCatPillUi();
+  renderCollabActivityUi();
   setHomeView("designs");
 })();
