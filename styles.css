@@ -428,6 +428,15 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
+.home-hero-sub {
+  margin: -4px 0 20px;
+  max-width: 44rem;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--muted);
+  font-weight: 400;
+}
+
 .home-tabs {
   display: flex;
   flex-wrap: wrap;

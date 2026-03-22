@@ -75,19 +75,87 @@ function rgbToColorWords(r, g, b) {
   return [...new Set(out)];
 }
 
-async function extractPaletteWords(buffer) {
+/**
+ * Sample the upload for palette vocabulary + mean RGB (for thumbnail distance).
+ * Words are ranked by pixel frequency so dominant hues matter more than rare outliers.
+ */
+async function extractImageColorFeatures(buffer) {
   const image = await Jimp.read(buffer);
-  image.resize({ w: 48, h: 48 });
-  const words = [];
-  const w = image.width;
-  const h = image.height;
-  for (let y = 0; y < h; y += 2) {
-    for (let x = 0; x < w; x += 2) {
+  image.resize({ w: 64, h: 64 });
+  const freq = new Map();
+  let sr = 0;
+  let sg = 0;
+  let sb = 0;
+  let n = 0;
+  const iw = image.width;
+  const ih = image.height;
+  for (let y = 0; y < ih; y += 2) {
+    for (let x = 0; x < iw; x += 2) {
       const { r, g, b } = intToRGBA(image.getPixelColor(x, y));
-      words.push(...rgbToColorWords(r, g, b));
+      sr += r;
+      sg += g;
+      sb += b;
+      n++;
+      for (const w of rgbToColorWords(r, g, b)) {
+        freq.set(w, (freq.get(w) || 0) + 1);
+      }
     }
   }
-  return [...new Set(words)].slice(0, 16);
+  const paletteWords = [...freq.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([w]) => w)
+    .slice(0, 24);
+  const meanRgb = n ? { r: sr / n, g: sg / n, b: sb / n } : { r: 128, g: 128, b: 128 };
+  return { paletteWords, meanRgb };
+}
+
+/** Max RGB Euclidean distance (black vs white corner). */
+const RGB_DIST_MAX = Math.sqrt(3 * 255 * 255);
+
+function rgbDistanceScore(a, b) {
+  if (!a || !b) return 0.45;
+  const d = Math.hypot(a.r - b.r, a.g - b.g, a.b - b.b);
+  return Math.max(0, Math.min(1, 1 - d / RGB_DIST_MAX));
+}
+
+/** Mean RGB per workspace thumbnail (lazy). */
+let thumbMeansLoaded = false;
+/** @type {({ r: number, g: number, b: number } | null)[]} */
+let assetThumbMeanRgb = [];
+
+async function ensureThumbMeans() {
+  if (thumbMeansLoaded) return;
+  thumbMeansLoaded = true;
+  assetThumbMeanRgb = await Promise.all(
+    assets.map(async (a) => {
+      if (!a.thumbnail) return null;
+      const p = join(__dirname, a.thumbnail);
+      if (!existsSync(p)) return null;
+      try {
+        const img = await Jimp.read(p);
+        img.resize({ w: 48, h: 48 });
+        let tr = 0;
+        let tg = 0;
+        let tb = 0;
+        let tn = 0;
+        const w = img.width;
+        const h = img.height;
+        for (let y = 0; y < h; y += 2) {
+          for (let x = 0; x < w; x += 2) {
+            const { r, g, b } = intToRGBA(img.getPixelColor(x, y));
+            tr += r;
+            tg += g;
+            tb += b;
+            tn++;
+          }
+        }
+        if (!tn) return null;
+        return { r: tr / tn, g: tg / tn, b: tb / tn };
+      } catch {
+        return null;
+      }
+    }),
+  );
 }
 
 const rawAssets = JSON.parse(readFileSync(DATA_PATH, "utf8"));
@@ -240,6 +308,11 @@ function weightsForQuery(q) {
   return { semantic: 0.34, keyword: 0.24, color: 0.16, visual: 0.26 };
 }
 
+/** Stronger color + thumbnail alignment when matching from an uploaded image. */
+function weightsForImageUpload() {
+  return { semantic: 0.22, keyword: 0.14, color: 0.44, visual: 0.2 };
+}
+
 function rankSignals(sem, key, col, vis, w) {
   const contrib = [
     ["semantic", sem * w.semantic],
@@ -300,17 +373,24 @@ async function ensureEmbeddings() {
 
 /**
  * Local matcher: four signals → confidence 0–100, all assets ranked.
- * @param {string} query
+ * @param {string} query — full text for keywords + color tokens (+ UI)
+ * @param {{ embedQuery?: string, imageMeanRgb?: { r: number, g: number, b: number }, weightsOverride?: { semantic: number, keyword: number, color: number, visual: number } }} [options]
+ *        embedQuery — if set, MiniLM embeds this string only (avoids diluting uploads with boilerplate)
  */
-async function matchLocalFourSignals(query) {
+async function matchLocalFourSignals(query, options = {}) {
   await ensureEmbeddings();
+  if (options.imageMeanRgb) {
+    await ensureThumbMeans();
+  }
   const qTokens = new Set(tokenize(query));
-  const w = weightsForQuery(query);
+  const w = options.weightsOverride ?? weightsForQuery(query);
+
+  const embedText = options.embedQuery != null && String(options.embedQuery).trim() ? String(options.embedQuery).trim() : query;
 
   let qVecMain = null;
   let qVecClip = null;
   if (extractor && indexed.length) {
-    const qo = await extractor(query, { pooling: "mean", normalize: true });
+    const qo = await extractor(embedText, { pooling: "mean", normalize: true });
     qVecMain = qVecClip = toVector(qo);
   }
 
@@ -324,6 +404,10 @@ async function matchLocalFourSignals(query) {
     let visual = 0.35;
     let keyword = jaccardSimilarity(qTokens, row ? row.tokenBlob : tokenSetForKeyword(a));
     let color = colorOverlapScore(query, a);
+    if (options.imageMeanRgb && assetThumbMeanRgb[i]) {
+      const thumbSim = rgbDistanceScore(options.imageMeanRgb, assetThumbMeanRgb[i]);
+      color = 0.42 * color + 0.58 * thumbSim;
+    }
 
     if (row && qVecMain) {
       semantic = toConfidence(cosineDot(qVecMain, row.vecMain));
@@ -572,28 +656,41 @@ app.post("/api/match-from-image", upload.single("image"), async (req, res) => {
       return;
     }
     let paletteWords;
+    let meanRgb;
     try {
-      paletteWords = await extractPaletteWords(req.file.buffer);
+      const feat = await extractImageColorFeatures(req.file.buffer);
+      paletteWords = feat.paletteWords;
+      meanRgb = feat.meanRgb;
     } catch (e) {
       res.status(400).json({ error: "Could not read image (try JPEG, PNG, WebP, or GIF).", matches: [] });
       return;
     }
     const note = String(req.body?.query ?? "").trim();
     const fname = req.file.originalname || "upload";
+    const stem = fname.replace(/\.[^.]+$/i, "").replace(/[_-]+/g, " ").trim();
+    /** Scoring + keyword tokens: include palette + optional brief. */
     const query = [
-      `Uploaded design image "${fname}"`,
-      `Dominant palette and mood: ${paletteWords.join(", ")}`,
-      note || "Find layouts and designs with similar visual style, color, and composition in the workspace.",
+      `Uploaded image "${fname}"`,
+      `Colors from pixels: ${paletteWords.join(", ")}`,
+      note || "Match workspace designs by color and description.",
     ].join(". ");
-    const out = await matchLocalFourSignals(query);
+    /** Embedding only: dense terms so MiniLM is not swamped by filler sentences. */
+    const embedQuery = [note, paletteWords.join(" "), stem].filter(Boolean).join(". ") || paletteWords.join(" ");
+
+    const out = await matchLocalFourSignals(query, {
+      embedQuery,
+      imageMeanRgb: meanRgb,
+      weightsOverride: weightsForImageUpload(),
+    });
     const payload = {
       ...out,
       source: "local-upload",
       paletteHints: paletteWords,
+      imageMeanRgb: { r: Math.round(meanRgb.r), g: Math.round(meanRgb.g), b: Math.round(meanRgb.b) },
     };
     if (anthropicApiKey()) {
       payload.warning =
-        "Image uploads use the local matcher (color + layout signals). Add a text brief and use Find similar without upload for Claude ranking.";
+        "Image uploads use the local matcher: pixel colors vs workspace thumbnails + text metadata (not Claude vision). Add a text brief without upload for Claude ranking.";
     }
     res.json(payload);
   } catch (err) {

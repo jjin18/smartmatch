@@ -944,11 +944,14 @@ function renderMatches(data) {
 
   if (source) {
     if (data.source === "claude") {
-      source.textContent = "Claude ranked from your brief (semantic, not keyword search).";
+      source.textContent =
+        "Claude ranked from your brief (semantic, not keyword search)—use results to reach the right owners on a large team.";
     } else if (data.source === "local-upload") {
-      source.textContent = "Uploaded image: palette + layout signals vs workspace (local matcher).";
+      source.textContent =
+        "Upload: pixel palette + average color vs thumbnails, plus text embeddings (local). Helps route work when many people share one library—not full vision AI.";
     } else {
-      source.textContent = "Local: meaning · keywords · color · layout (see bars).";
+      source.textContent =
+        "Local: meaning · keywords · color · layout (see bars)—surfaces overlaps so squads don’t duplicate the same brief.";
     }
   }
   if (!list) return;
@@ -1028,7 +1031,7 @@ function openMatchActionModal(action, asset) {
 
   if (action === "collab") {
     matchModalTitle.textContent = "Collaborate";
-    matchModalDesc.innerHTML = `${ownerStrong} is notified when you join this file. The design opens in a full preview here so you can review in context.`;
+    matchModalDesc.innerHTML = `${ownerStrong} is notified when you join this file—reduces “who’s on this?” churn on large teams. The design opens in a full preview here so you can review in context.`;
     if (asset?.thumbnail && previewImg && previewWrap) {
       previewImg.src = publicAssetUrl(asset.thumbnail);
       previewImg.alt = safe(name);
@@ -1241,8 +1244,8 @@ scanBtn.addEventListener("click", async () => {
   scanBtn.disabled = true;
   scanHint.hidden = false;
   scanHint.textContent = isUpload
-    ? "Reading image and matching the workspace…"
-    : "Matching your brief to the workspace…";
+    ? "Reading your image and scanning the shared workspace for close matches…"
+    : "Matching your brief across the team library (meaning, keywords, visuals)…";
   matchSection.hidden = true;
   toast.hidden = true;
 
