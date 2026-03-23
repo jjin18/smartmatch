@@ -1254,135 +1254,6 @@ body {
   border-radius: 2px;
 }
 
-/* Smart Match high-similarity alert */
-.smart-match-alert {
-  position: fixed;
-  inset: 0;
-  z-index: 1001;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-
-.smart-match-alert[hidden] {
-  display: none !important;
-}
-
-.smart-match-alert__backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.5);
-  cursor: pointer;
-}
-
-.smart-match-alert__dialog {
-  position: relative;
-  width: min(100%, 440px);
-  padding: 22px;
-  border-radius: var(--radius);
-  background: #fff;
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
-  border: 1px solid var(--border);
-}
-
-.smart-match-alert__badge {
-  margin: 0 0 8px;
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #7c3aed;
-}
-
-.smart-match-alert__title {
-  margin: 0 0 8px;
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--text);
-}
-
-.smart-match-alert__sub {
-  margin: 0 0 16px;
-  font-size: 14px;
-  color: var(--muted);
-  line-height: 1.45;
-}
-
-.smart-match-alert__compare {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.smart-match-alert__fig {
-  margin: 0;
-}
-
-.smart-match-alert__fig figcaption {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--muted);
-  margin-bottom: 6px;
-}
-
-.sma-thumb-wrap {
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  aspect-ratio: 4/3;
-  max-height: 112px;
-  background: #f1f5f9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sma-thumb-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.sma-placeholder {
-  font-size: 13px;
-  color: var(--muted);
-  padding: 12px;
-  text-align: center;
-}
-
-.sma-match-img {
-  width: 100%;
-  max-height: 112px;
-  height: auto;
-  display: block;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  aspect-ratio: 4/3;
-  object-fit: cover;
-}
-
-.smart-match-alert__meta {
-  margin: 0 0 16px;
-  font-size: 13px;
-  color: var(--text);
-  line-height: 1.4;
-}
-
-.smart-match-alert__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.smart-match-alert__actions .btn {
-  flex: 1 1 auto;
-  min-width: 120px;
-}
-
 .panel {
   background: var(--bg-panel);
   border: 1px solid var(--border);
@@ -1729,6 +1600,14 @@ body {
 .match-card-title {
   font-weight: 700;
   font-size: 15px;
+}
+
+.match-card-title--file {
+  font-family: ui-monospace, "Cascadia Mono", "Cascadia Code", Consolas, monospace;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  word-break: break-all;
 }
 
 .match-card-score {

@@ -121,25 +121,11 @@ let currentHomeTab = "smart";
 /** Stand-in asset shown as “current design” on Your designs tab. */
 let currentDesignAsset = null;
 
-/** Top match when Smart Match alert is open. */
-let lastSmartAlertMatch = null;
-
 /** Up to two workspace assets shown on “Your designs”; each is polled for similarity. */
 let activeDesignSlots = [];
 
 /** @type {ReturnType<typeof setInterval> | null} */
 let ydPollTimer = null;
-
-/** Avoid back-to-back popups when two slots both hit the threshold. */
-let lastGlobalSmartAlertAt = 0;
-
-/** Session: don’t repeat the same source→match nudge. */
-const seenSmartAlertPairs = new Set();
-
-/** Show popup when best match is at or above this (0–100). */
-const SMART_ALERT_MIN_CONFIDENCE = 55;
-
-const SMART_ALERT_THROTTLE_MS = 10000;
 
 const PALETTES = [
   "linear-gradient(135deg,#60a5fa,#a78bfa)",
@@ -313,6 +299,37 @@ function escapeHtml(s) {
   const d = document.createElement("div");
   d.textContent = s;
   return d.innerHTML;
+}
+
+function slugifyFileToken(s) {
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .replace(/_+/g, "_");
+}
+
+function ownerTokenForFilename(ownerDisp, index) {
+  const o = String(ownerDisp || "").trim();
+  if (!o || o === "—") return `u${(index % 8) + 1}`;
+  const parts = o.split(/\s+/).filter(Boolean);
+  const last = slugifyFileToken(parts[parts.length - 1] || "");
+  if (last.length >= 2) return last.slice(0, 14);
+  const first = slugifyFileToken(parts[0] || "");
+  return (first.slice(0, 14) || `u${index + 1}`).replace(/^_/, "") || `u${index + 1}`;
+}
+
+/** File-style label for Smart Match cards only — display; `name` / ids stay unchanged for API logic. */
+function matchCardFilenameDisplay(m, index) {
+  const raw = String(m?.name || m?.id || "design").trim();
+  const head = (raw.split(/\s*[—–\-:|]\s*/)[0] || raw).trim();
+  let base = slugifyFileToken(head);
+  if (!base) base = slugifyFileToken(m?.id || "design") || "design";
+  const owner = ownerTokenForFilename(recentsOwnerLabel(m, index), index);
+  const ver = (index % 5) + 1;
+  return `${base}_${owner}_v${ver}`;
 }
 
 /** Flyer, Instagram post, Site / landing page, etc. — from API `designFormat` or fallback. */
@@ -868,67 +885,6 @@ function setHomeView(tab) {
   applyRecentsFilters();
 }
 
-function closeSmartMatchAlert() {
-  const el = document.getElementById("smart-match-alert");
-  if (el) el.hidden = true;
-  lastSmartAlertMatch = null;
-}
-
-function openSmartMatchAlert(match, sourceAsset) {
-  lastSmartAlertMatch = match;
-  const src = sourceAsset ?? currentDesignAsset;
-  const el = document.getElementById("smart-match-alert");
-  const sub = document.getElementById("sma-sub");
-  const meta = document.getElementById("sma-meta");
-  const mimg = document.getElementById("sma-match-img");
-  const yours = document.getElementById("sma-yours");
-  if (!el || !sub || !meta || !mimg || !yours) return;
-
-  sub.textContent = `Close match · ${match.confidence}%`;
-  meta.textContent = [match.name, recentsOwnerLabel(match, 0), match.status].filter(Boolean).join(" · ");
-
-  if (match.thumbnail) {
-    mimg.src = publicAssetUrl(match.thumbnail);
-    mimg.alt = match.name || "";
-    mimg.hidden = false;
-  } else {
-    mimg.hidden = true;
-  }
-
-  yours.replaceChildren();
-  if (src?.thumbnail) {
-    const im = document.createElement("img");
-    im.className = "sma-thumb-img";
-    im.src = publicAssetUrl(src.thumbnail);
-    im.alt = src.name || "Your design";
-    yours.appendChild(im);
-  } else {
-    const ph = document.createElement("div");
-    ph.className = "sma-placeholder";
-    ph.textContent = "Your design";
-    yours.appendChild(ph);
-  }
-
-  el.hidden = false;
-}
-
-function maybeShowSmartMatchAlert(result, sourceAsset) {
-  if (result?.imageUnreadable) return;
-  const top = result.matches?.[0];
-  if (!top || typeof top.confidence !== "number") return;
-  if (top.confidence < SMART_ALERT_MIN_CONFIDENCE) return;
-  const source = sourceAsset ?? currentDesignAsset;
-  if (source && top.id === source.id) return;
-
-  const pairKey = `${source?.id ?? "scan"}->${top.id}`;
-  if (seenSmartAlertPairs.has(pairKey)) return;
-  if (Date.now() - lastGlobalSmartAlertAt < SMART_ALERT_THROTTLE_MS) return;
-
-  seenSmartAlertPairs.add(pairKey);
-  lastGlobalSmartAlertAt = Date.now();
-  openSmartMatchAlert(top, source);
-}
-
 globalSearch?.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     e.preventDefault();
@@ -1119,6 +1075,7 @@ function renderMatches(data) {
     return;
   }
   if (empty) empty.hidden = true;
+  const showNewDesign = data.source === "local-upload";
   matches.forEach((m, idx) => {
     const el = document.createElement("article");
     el.className = "match-card-item";
@@ -1128,7 +1085,7 @@ function renderMatches(data) {
     el.innerHTML = `
       <span class="asset-format-pill">${escapeHtml(designFormatLabel(m))}</span>
       <div class="match-card-head">
-        <span class="match-card-title">${escapeHtml(m.name || m.id)}</span>
+        <span class="match-card-title match-card-title--file" title="${escapeHtml(m.name || m.id)}">${escapeHtml(matchCardFilenameDisplay(m, idx))}</span>
         <span class="match-card-score" title="Similarity">${escapeHtml(String(m.confidence))}%</span>
       </div>
       <p class="match-card-owner-line">Owner: <strong>${escapeHtml(recentsOwnerLabel(m, idx))}</strong></p>
@@ -1141,7 +1098,11 @@ function renderMatches(data) {
       <div class="match-card-actions match-card-actions--collab-first">
         <button type="button" class="btn btn-gradient match-act btn-collab-wide" data-match-action="collab">Collaborate</button>
         <button type="button" class="btn btn-outline match-act" data-match-action="duplicate">Start from this</button>
-        <button type="button" class="btn btn-ghost match-act" data-match-action="new">New design</button>
+        ${
+          showNewDesign
+            ? `<button type="button" class="btn btn-ghost match-act" data-match-action="new">New design</button>`
+            : ""
+        }
       </div>`;
     el.querySelectorAll(".match-act").forEach((btn) => {
       btn.dataset.assetId = m.id;
@@ -1299,11 +1260,6 @@ document.addEventListener("keydown", (e) => {
     closeFakeChat();
     return;
   }
-  const sma = document.getElementById("smart-match-alert");
-  if (sma && !sma.hidden) {
-    closeSmartMatchAlert();
-    return;
-  }
   if (matchModal && !matchModal.hidden) closeMatchModal();
 });
 
@@ -1323,16 +1279,6 @@ function goToSmartMatchEntry() {
 }
 
 document.querySelector(".templates-smart-link")?.addEventListener("click", goToSmartMatchEntry);
-
-document.getElementById("sma-collab")?.addEventListener("click", () => {
-  if (!lastSmartAlertMatch) return;
-  const m = lastSmartAlertMatch;
-  closeSmartMatchAlert();
-  openMatchActionModal("collab", m);
-});
-
-document.getElementById("sma-dismiss")?.addEventListener("click", closeSmartMatchAlert);
-document.querySelector("[data-close-sm-alert]")?.addEventListener("click", closeSmartMatchAlert);
 
 async function matchWithApi(query) {
   const res = await fetch("/api/match", {
@@ -1410,7 +1356,6 @@ scanBtn.addEventListener("click", async () => {
       ? await matchWithImageApi(smartMatchUploadFile, text)
       : await matchWithApi(text);
     renderMatches(result);
-    maybeShowSmartMatchAlert(result);
     scanHint.hidden = true;
     matchSection.hidden = false;
     await refreshHealth();
