@@ -399,7 +399,7 @@ function renderTemplatesBrowsePanel() {
     const name = escapeHtml(a.name || a.id || "Untitled");
     const fmt = escapeHtml(designFormatLabel(a));
     const thumb = a.thumbnail
-      ? `<div class="templates-browse-thumb"><img src="${escapeHtml(publicAssetUrl(a.thumbnail))}" alt="" width="200" height="150" loading="lazy" /></div>`
+      ? `<div class="templates-browse-thumb"><img src="${escapeHtml(publicAssetUrl(a.thumbnail))}" alt="" width="160" height="120" loading="lazy" /></div>`
       : `<div class="templates-browse-thumb templates-browse-thumb--ph" aria-hidden="true"></div>`;
     art.innerHTML = `${thumb}
       <div class="templates-browse-card-body">
@@ -476,6 +476,66 @@ function closeDesignPreview() {
   }
   if (shell) shell.hidden = true;
   document.body.style.overflow = "";
+}
+
+function ownerInitialsForChat(owner) {
+  const parts = String(owner || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return (parts[0] || "?").slice(0, 2).toUpperCase();
+}
+
+/** Demo team chat beside the icon rail (opens after “Notify owner & view design”). */
+function openFakeChat(asset) {
+  const rail = document.getElementById("fake-chat-rail");
+  const sub = document.getElementById("fake-chat-sub");
+  const thread = document.getElementById("fake-chat-thread");
+  if (!rail || !sub || !thread) return;
+
+  const owner = recentsOwnerLabel(asset, 0);
+  const ownerDisp = owner && owner !== "—" ? owner : "Owner";
+  const label = asset.name || asset.id || "design";
+  const safeOwner = escapeHtml(ownerDisp);
+  const safeLabel = escapeHtml(label);
+  const initials = escapeHtml(ownerInitialsForChat(ownerDisp));
+
+  sub.textContent = `With ${ownerDisp} · ${label}`;
+
+  thread.innerHTML = `
+    <p class="fake-chat-system">You notified ${safeOwner} about “${safeLabel}”.</p>
+    <div class="fake-chat-msg">
+      <span class="fake-chat-avatar" aria-hidden="true">${initials}</span>
+      <div class="fake-chat-bubble">
+        <p>Thanks for the heads-up — opening the file now. Shout if you want to align on the hero or CTA.</p>
+        <time>Just now</time>
+      </div>
+    </div>
+    <div class="fake-chat-msg fake-chat-msg--you">
+      <span class="fake-chat-avatar fake-chat-avatar--you" aria-hidden="true">JJ</span>
+      <div class="fake-chat-bubble">
+        <p>Perfect — I’ll review in preview.</p>
+        <time>Just now</time>
+      </div>
+    </div>
+  `;
+
+  rail.hidden = false;
+  rail.removeAttribute("aria-hidden");
+  requestAnimationFrame(() => {
+    rail.classList.add("is-open");
+  });
+}
+
+function closeFakeChat() {
+  const rail = document.getElementById("fake-chat-rail");
+  if (!rail) return;
+  rail.classList.remove("is-open");
+  window.setTimeout(() => {
+    rail.hidden = true;
+    rail.setAttribute("aria-hidden", "true");
+  }, 320);
 }
 
 /**
@@ -907,6 +967,7 @@ function renderMatches(data) {
   const list = document.getElementById("match-list");
   const empty = document.getElementById("match-empty");
   const source = document.getElementById("match-source");
+  const queryHint = document.getElementById("match-query-hint");
   const all = data.matches || [];
   const matches = all.slice(0, MAX_VISIBLE_MATCHES);
   matchByAssetId = Object.fromEntries(matches.map((m) => [m.id, m]));
@@ -932,6 +993,20 @@ function renderMatches(data) {
         "Local scorer · meaning, keywords, color, layout—surfaces overlap before squads duplicate briefs.";
     }
   }
+
+  if (queryHint) {
+    if (data.lowInformationQuery && (data.source === "local" || data.source === "local-upload")) {
+      queryHint.textContent =
+        data.source === "local-upload"
+          ? "Semantic bars are uncertain without a short text brief—color match is doing most of the work."
+          : "Your brief has almost no real words, so “meaning” scores are pulled toward neutral—embeddings alone would be misleading here. Add a few descriptive words.";
+      queryHint.hidden = false;
+    } else {
+      queryHint.hidden = true;
+      queryHint.textContent = "";
+    }
+  }
+
   if (!list) return;
   list.replaceChildren();
   if (!matches.length) {
@@ -1051,6 +1126,7 @@ document.getElementById("match-modal-primary")?.addEventListener("click", () => 
   if (action === "collab") {
     recordCollabActivity("collab", asset);
     closeMatchModal();
+    openFakeChat(asset);
     if (!hasFile) showToast(`Notified ${ownerDisp} · no preview file on this asset`);
     else {
       const opened = openDesignPreview(asset);
@@ -1079,6 +1155,8 @@ document.getElementById("match-modal-primary")?.addEventListener("click", () => 
 
 document.getElementById("design-preview-close")?.addEventListener("click", closeDesignPreview);
 document.querySelector("[data-close-design-preview]")?.addEventListener("click", closeDesignPreview);
+
+document.getElementById("fake-chat-close")?.addEventListener("click", closeFakeChat);
 
 document.querySelectorAll(".nav-team-avatar").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -1109,6 +1187,11 @@ document.addEventListener("keydown", (e) => {
   const dp = document.getElementById("design-preview");
   if (dp && !dp.hidden) {
     closeDesignPreview();
+    return;
+  }
+  const fcr = document.getElementById("fake-chat-rail");
+  if (fcr && !fcr.hidden && fcr.classList.contains("is-open")) {
+    closeFakeChat();
     return;
   }
   const sma = document.getElementById("smart-match-alert");

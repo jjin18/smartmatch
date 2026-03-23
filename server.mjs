@@ -280,6 +280,35 @@ function toConfidence(cosine) {
   return Math.max(0, Math.min(1, (cosine + 1) / 2));
 }
 
+/**
+ * How much to trust embedding cosine scores. Nonsense or symbol-only strings still get
+ * mid-range vectors, so “meaning” would look arbitrarily high without dampening.
+ * @returns {number} 0–1 (1 = full trust)
+ */
+function computeQuerySalience(query, embedText) {
+  const combined = `${String(query || "")} ${String(embedText || "")}`.trim();
+  const words = tokenize(combined);
+  const unique = new Set(words);
+  const n = unique.size;
+  const alnumLen = combined.replace(/[^a-z0-9]+/gi, "").length;
+
+  if (n === 0) {
+    if (alnumLen === 0) return 0.04;
+    if (alnumLen < 3) return 0.08;
+    return 0.2;
+  }
+  if (n === 1) return alnumLen < 4 ? 0.3 : 0.52;
+  if (n === 2) return 0.74;
+  if (n === 3) return 0.88;
+  return Math.min(1, 0.84 + n * 0.025);
+}
+
+/** Pull embedding-based scores toward neutral when salience is low. */
+function dampenEmbeddingScore(raw, salience) {
+  const neutral = 0.44;
+  return Math.max(0, Math.min(1, neutral + (raw - neutral) * salience));
+}
+
 const COLOR_WORDS = /\b(red|blue|green|teal|purple|pink|orange|yellow|black|white|gray|grey|navy|cyan|pastel|neon|gold|cream|beige|coral|magenta|violet|gradient|muted|bright|dark|light|sunset|warm|cool)\b/i;
 
 function colorOverlapScore(query, asset) {
@@ -387,6 +416,8 @@ async function matchLocalFourSignals(query, options = {}) {
 
   const embedText = options.embedQuery != null && String(options.embedQuery).trim() ? String(options.embedQuery).trim() : query;
 
+  const salience = computeQuerySalience(query, embedText);
+
   let qVecMain = null;
   let qVecClip = null;
   if (extractor && indexed.length) {
@@ -412,6 +443,8 @@ async function matchLocalFourSignals(query, options = {}) {
     if (row && qVecMain) {
       semantic = toConfidence(cosineDot(qVecMain, row.vecMain));
       visual = toConfidence(cosineDot(qVecClip, row.vecClip));
+      semantic = dampenEmbeddingScore(semantic, salience);
+      visual = dampenEmbeddingScore(visual, salience);
     } else {
       const blob = [a.name, a.description, ...(a.tags || [])].join(" ");
       semantic = jaccardSimilarity(qTokens, new Set(tokenize(blob)));
@@ -446,7 +479,12 @@ async function matchLocalFourSignals(query, options = {}) {
   }
 
   results.sort((a, b) => b.confidence - a.confidence);
-  return { matches: results, source: "local" };
+  return {
+    matches: results,
+    source: "local",
+    querySalience: salience,
+    lowInformationQuery: salience < 0.28,
+  };
 }
 
 /**
