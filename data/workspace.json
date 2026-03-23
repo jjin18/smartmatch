@@ -29,7 +29,8 @@
     ],
     "owner": "John Smith",
     "status": "Template",
-    "designFormat": "Flyer"
+    "designFormat": "Flyer",
+    "ownerLocation": "Phoenix, AZ"
   },
   {
     "id": "tpl-img-004",
@@ -60,7 +61,8 @@
     ],
     "owner": "Emma Wilson",
     "status": "Template",
-    "designFormat": "Site / landing page"
+    "designFormat": "Site / landing page",
+    "ownerLocation": "Seattle, WA"
   },
   {
     "id": "tpl-img-005",
@@ -90,7 +92,8 @@
     ],
     "owner": "Michael Brown",
     "status": "Template",
-    "designFormat": "Poster"
+    "designFormat": "Poster",
+    "ownerLocation": "Denver, CO"
   },
   {
     "id": "tpl-img-006",
@@ -121,7 +124,8 @@
     ],
     "owner": "Sarah Davis",
     "status": "Template",
-    "designFormat": "Print — ticket"
+    "designFormat": "Print — ticket",
+    "ownerLocation": "New York, NY"
   },
   {
     "id": "tpl-img-007",
@@ -153,7 +157,8 @@
     ],
     "owner": "David Lee",
     "status": "Template",
-    "designFormat": "Instagram post"
+    "designFormat": "Instagram post",
+    "ownerLocation": "Houston, TX"
   },
   {
     "id": "tpl-img-001",
@@ -186,7 +191,8 @@
     ],
     "owner": "Jennifer Taylor",
     "status": "Template",
-    "designFormat": "Facebook post"
+    "designFormat": "Facebook post",
+    "ownerLocation": "Chicago, IL"
   },
   {
     "id": "tpl-img-002",
@@ -218,7 +224,8 @@
     ],
     "owner": "Robert Moore",
     "status": "Template",
-    "designFormat": "Flyer"
+    "designFormat": "Flyer",
+    "ownerLocation": "Atlanta, GA"
   },
   {
     "id": "tpl-img-008",
@@ -249,7 +256,8 @@
     ],
     "owner": "Lisa Anderson",
     "status": "Template",
-    "designFormat": "Presentation"
+    "designFormat": "Presentation",
+    "ownerLocation": "Miami, FL"
   },
   {
     "id": "tpl-img-009",
@@ -281,7 +289,8 @@
     ],
     "owner": "James Thomas",
     "status": "Template",
-    "designFormat": "Instagram post"
+    "designFormat": "Instagram post",
+    "ownerLocation": "Dallas, TX"
   },
   {
     "id": "tpl-img-010",
@@ -311,7 +320,8 @@
     ],
     "owner": "Maria Garcia",
     "status": "Template",
-    "designFormat": "Presentation"
+    "designFormat": "Presentation",
+    "ownerLocation": "San Diego, CA"
   },
   {
     "id": "tpl-img-011",
@@ -343,7 +353,8 @@
     ],
     "owner": "William Martinez",
     "status": "Template",
-    "designFormat": "Instagram story"
+    "designFormat": "Instagram story",
+    "ownerLocation": "Austin, TX"
   },
   {
     "id": "tpl-img-012",
@@ -373,7 +384,8 @@
     ],
     "owner": "Patricia White",
     "status": "Template",
-    "designFormat": "Facebook post"
+    "designFormat": "Facebook post",
+    "ownerLocation": "Boston, MA"
   },
   {
     "id": "tpl-img-013",
@@ -404,7 +416,8 @@
     ],
     "owner": "Richard Harris",
     "status": "Template",
-    "designFormat": "Banner / ad"
+    "designFormat": "Banner / ad",
+    "ownerLocation": "Philadelphia, PA"
   },
   {
     "id": "tpl-img-014",
@@ -435,7 +448,8 @@
     ],
     "owner": "Linda Clark",
     "status": "Template",
-    "designFormat": "Social post"
+    "designFormat": "Social post",
+    "ownerLocation": "Portland, OR"
   },
   {
     "id": "tpl-img-015",
@@ -467,7 +481,8 @@
     ],
     "owner": "Joseph Lewis",
     "status": "Template",
-    "designFormat": "Social post"
+    "designFormat": "Social post",
+    "ownerLocation": "Los Angeles, CA"
   },
   {
     "id": "tpl-img-016",
@@ -496,7 +511,8 @@
     ],
     "owner": "Barbara Walker",
     "status": "Template",
-    "designFormat": "Logo / brand"
+    "designFormat": "Logo / brand",
+    "ownerLocation": "London, UK"
   },
   {
     "id": "tpl-img-017",
@@ -524,7 +540,8 @@
     ],
     "owner": "Thomas Hall",
     "status": "Template",
-    "designFormat": "Logo / brand"
+    "designFormat": "Logo / brand",
+    "ownerLocation": "Vancouver, BC"
   },
   {
     "id": "tpl-img-018",
@@ -552,7 +569,8 @@
     ],
     "owner": "Susan Allen",
     "status": "Template",
-    "designFormat": "Logo / brand"
+    "designFormat": "Logo / brand",
+    "ownerLocation": "Toronto, ON"
   },
   {
     "id": "tpl-img-019",
@@ -584,7 +602,8 @@
     ],
     "owner": "Charles Young",
     "status": "Template",
-    "designFormat": "Menu"
+    "designFormat": "Menu",
+    "ownerLocation": "Nashville, TN"
   },
   {
     "id": "tpl-img-020",
@@ -614,7 +633,8 @@
     ],
     "owner": "Karen King",
     "status": "Template",
-    "designFormat": "Menu"
+    "designFormat": "Menu",
+    "ownerLocation": "Minneapolis, MN"
   },
   {
     "id": "yd-inprogress-coffee",
@@ -645,7 +665,8 @@
     ],
     "owner": "You",
     "status": "In progress",
-    "designFormat": "Flyer"
+    "designFormat": "Flyer",
+    "ownerLocation": "San Francisco, CA"
   },
   {
     "id": "yd-inprogress-flight",
@@ -675,6 +696,7 @@
     ],
     "owner": "You",
     "status": "In progress",
-    "designFormat": "Poster"
+    "designFormat": "Poster",
+    "ownerLocation": "Los Angeles, CA"
   }
 ]

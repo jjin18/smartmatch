@@ -364,12 +364,26 @@ body {
 
 .fake-chat-sub {
   margin: 6px 0 0;
+  max-width: 100%;
+}
+
+.fake-chat-file-line {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.fake-chat-owner-line {
+  margin: 0;
   font-size: 11px;
   line-height: 1.35;
   color: var(--muted);
   overflow-wrap: anywhere;
   word-break: break-word;
-  max-width: 100%;
 }
 
 .fake-chat-thread {

@@ -25,6 +25,18 @@ let uploadPreviewObjectUrl = null;
 /** Only show the strongest matches so the list stays short. */
 const MAX_VISIBLE_MATCHES = 5;
 
+/** Below this top score, we show “doesn’t match” instead of match cards (noise / junk queries). */
+const MATCH_TOP_SCORE_MIN_SHOW = 23;
+
+/** Low-information text brief (or no real tokens): if best score is still under this, skip cards. */
+const MATCH_TOP_SCORE_MIN_LOWINFO_TEXT = 46;
+
+/** Single dictionary-poor token (e.g. gibberish) with a weak top score → treat as no match. */
+const MATCH_TOP_SCORE_SHALLOW_TEXT = 40;
+
+/** When we still show cards, hint that fit is weak. */
+const MATCH_TOP_SCORE_WEAK_HINT = 38;
+
 /** @type {Record<string, object>} */
 let matchByAssetId = {};
 
@@ -190,6 +202,21 @@ function recentsOwnerLabel(a, index) {
     return RECENTS_GENERIC_OWNERS[index % RECENTS_GENERIC_OWNERS.length];
   }
   return o || "—";
+}
+
+/**
+ * City / region for owner (from workspace cache), or empty string.
+ * @param {object} a — asset or match row
+ * @param {number} index — unused; reserved for parity with `recentsOwnerLabel`
+ */
+function recentsOwnerLocation(a, _index) {
+  const id = a.id != null ? String(a.id) : "";
+  if (id && workspaceCacheItems.length) {
+    const cached = workspaceCacheItems.find((x) => x.id === id);
+    const loc = cached ? String(cached.ownerLocation || "").trim() : "";
+    if (loc) return loc;
+  }
+  return String(a.ownerLocation || "").trim();
 }
 
 /** Min modeled confidence (0–100) to show in Your designs → similar templates list and left summary. */
@@ -490,17 +517,23 @@ function ownerInitialsForChat(owner) {
 function openFakeChat(asset) {
   const rail = document.getElementById("fake-chat-rail");
   const sub = document.getElementById("fake-chat-sub");
+  const fileLine = document.getElementById("fake-chat-file-line");
+  const ownerLine = document.getElementById("fake-chat-owner-line");
   const thread = document.getElementById("fake-chat-thread");
   if (!rail || !sub || !thread) return;
 
   const owner = recentsOwnerLabel(asset, 0);
   const ownerDisp = owner && owner !== "—" ? owner : "Owner";
+  const location = recentsOwnerLocation(asset, 0);
   const label = asset.name || asset.id || "design";
   const safeOwner = escapeHtml(ownerDisp);
   const safeLabel = escapeHtml(label);
   const initials = escapeHtml(ownerInitialsForChat(ownerDisp));
 
-  sub.textContent = `With ${ownerDisp} · ${label}`;
+  if (fileLine) fileLine.textContent = label;
+  if (ownerLine) {
+    ownerLine.textContent = location ? `Owner: ${ownerDisp} · ${location}` : `Owner: ${ownerDisp}`;
+  }
 
   thread.innerHTML = `
     <p class="fake-chat-system">You notified ${safeOwner} about “${safeLabel}”.</p>
@@ -880,6 +913,7 @@ function openSmartMatchAlert(match, sourceAsset) {
 }
 
 function maybeShowSmartMatchAlert(result, sourceAsset) {
+  if (result?.imageUnreadable) return;
   const top = result.matches?.[0];
   if (!top || typeof top.confidence !== "number") return;
   if (top.confidence < SMART_ALERT_MIN_CONFIDENCE) return;
@@ -957,37 +991,117 @@ function renderMatches(data) {
   const source = document.getElementById("match-source");
   const queryHint = document.getElementById("match-query-hint");
   const all = data.matches || [];
-  const matches = all.slice(0, MAX_VISIBLE_MATCHES);
-  matchByAssetId = Object.fromEntries(matches.map((m) => [m.id, m]));
-
-  if (matchTrimHint) {
-    if (all.length > MAX_VISIBLE_MATCHES) {
-      matchTrimHint.textContent = `Top ${MAX_VISIBLE_MATCHES} of ${all.length} · edit brief and re-run to refresh.`;
-      matchTrimHint.hidden = false;
-    } else {
-      matchTrimHint.hidden = true;
-    }
-  }
+  const isTextSource = data.source === "local" || data.source === "claude";
+  const unusableImage = Boolean(data.imageUnreadable);
 
   if (source) {
     if (data.source === "claude") {
       source.textContent =
         "Claude · semantic ranking from your brief—use it to pick the right owner on a busy team.";
     } else if (data.source === "local-upload") {
-      source.textContent =
-        "Upload: palette + thumbnail color vs library, plus text embeddings (local, not vision AI).";
+      source.textContent = unusableImage
+        ? "Image upload"
+        : "Upload: palette + thumbnail color vs library, plus text embeddings (local, not vision AI).";
     } else {
       source.textContent =
         "Local scorer · meaning, keywords, color, layout—surfaces overlap before squads duplicate briefs.";
     }
   }
 
+  if (unusableImage) {
+    matchByAssetId = {};
+    if (matchTrimHint) {
+      matchTrimHint.hidden = true;
+      matchTrimHint.textContent = "";
+    }
+    if (queryHint) {
+      queryHint.hidden = true;
+      queryHint.textContent = "";
+    }
+    if (empty) {
+      empty.textContent =
+        data.userMessage ||
+        "This image could not be read. It doesn’t match anything in your workspace—try JPEG, PNG, WebP, or GIF.";
+      empty.hidden = false;
+    }
+    if (list) list.replaceChildren();
+    return;
+  }
+
+  if (!all.length) {
+    matchByAssetId = {};
+    if (matchTrimHint) {
+      matchTrimHint.hidden = true;
+      matchTrimHint.textContent = "";
+    }
+    if (queryHint) {
+      queryHint.hidden = true;
+      queryHint.textContent = "";
+    }
+    if (empty) {
+      empty.textContent = "No strong match—add context or change the reference and run again.";
+      empty.hidden = false;
+    }
+    if (list) list.replaceChildren();
+    return;
+  }
+
+  const topScore = all[0]?.confidence ?? 0;
+  const shallowGibberish =
+    isTextSource &&
+    Boolean(data.shallowTextQuery) &&
+    topScore < MATCH_TOP_SCORE_SHALLOW_TEXT;
+  const hideCardsForWeakQuery =
+    topScore < MATCH_TOP_SCORE_MIN_SHOW ||
+    (isTextSource &&
+      topScore < MATCH_TOP_SCORE_MIN_LOWINFO_TEXT &&
+      (data.lowInformationQuery || data.noQueryTokens)) ||
+    shallowGibberish;
+
+  const matches = hideCardsForWeakQuery ? [] : all.slice(0, MAX_VISIBLE_MATCHES);
+  matchByAssetId = Object.fromEntries(matches.map((m) => [m.id, m]));
+
+  if (matchTrimHint) {
+    if (!hideCardsForWeakQuery && all.length > MAX_VISIBLE_MATCHES) {
+      matchTrimHint.textContent = `Top ${MAX_VISIBLE_MATCHES} of ${all.length} · edit brief and re-run to refresh.`;
+      matchTrimHint.hidden = false;
+    } else {
+      matchTrimHint.hidden = true;
+      matchTrimHint.textContent = "";
+    }
+  }
+
+  if (hideCardsForWeakQuery) {
+    if (empty) {
+      empty.hidden = false;
+      const thinLanguage =
+        (data.lowInformationQuery || data.noQueryTokens || shallowGibberish) &&
+        topScore < MATCH_TOP_SCORE_MIN_LOWINFO_TEXT;
+      empty.textContent = thinLanguage
+        ? "That doesn’t match anything useful here—there isn’t enough real language for meaning or keywords to work (e.g. symbols, tags, or gibberish). Use a short plain-language brief and run again."
+        : "That doesn’t match anything in your workspace closely enough. Try a clearer brief or a different image.";
+    }
+    if (queryHint) {
+      queryHint.hidden = true;
+      queryHint.textContent = "";
+    }
+    if (list) list.replaceChildren();
+    return;
+  }
+
   if (queryHint) {
-    if (data.lowInformationQuery && (data.source === "local" || data.source === "local-upload")) {
+    const lowInfo =
+      data.lowInformationQuery &&
+      (data.source === "local" || data.source === "local-upload" || data.source === "claude");
+    if (lowInfo) {
       queryHint.textContent =
         data.source === "local-upload"
-          ? "Semantic bars are uncertain without a short text brief—color match is doing most of the work."
-          : "Your brief has almost no real words, so “meaning” scores are pulled toward neutral—embeddings alone would be misleading here. Add a few descriptive words.";
+          ? "If your text brief is empty or very short, meaning and keyword matching won’t help much—results lean on color and the image. Add a few words (topic, brand, format) for stronger overlap."
+          : "If your prompt is too short, matching often won’t do well on meaning or keywords—add a few concrete words (topic, format, audience) and run again.";
+      queryHint.hidden = false;
+    } else if (topScore < MATCH_TOP_SCORE_WEAK_HINT) {
+      queryHint.textContent =
+        "Best matches below are only a weak fit—nothing lines up strongly with what you entered.";
       queryHint.hidden = false;
     } else {
       queryHint.hidden = true;
@@ -998,10 +1112,13 @@ function renderMatches(data) {
   if (!list) return;
   list.replaceChildren();
   if (!matches.length) {
-    empty.hidden = false;
+    if (empty) {
+      empty.textContent = "No strong match—add context or change the reference and run again.";
+      empty.hidden = false;
+    }
     return;
   }
-  empty.hidden = true;
+  if (empty) empty.hidden = true;
   matches.forEach((m, idx) => {
     const el = document.createElement("article");
     el.className = "match-card-item";
@@ -1291,9 +1408,6 @@ scanBtn.addEventListener("click", async () => {
     const result = isUpload
       ? await matchWithImageApi(smartMatchUploadFile, text)
       : await matchWithApi(text);
-    if (result.warning) {
-      showToast(result.warning);
-    }
     renderMatches(result);
     maybeShowSmartMatchAlert(result);
     scanHint.hidden = true;

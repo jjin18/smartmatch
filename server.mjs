@@ -484,6 +484,8 @@ async function matchLocalFourSignals(query, options = {}) {
     source: "local",
     querySalience: salience,
     lowInformationQuery: salience < 0.28,
+    noQueryTokens: qTokens.size === 0,
+    shallowTextQuery: qTokens.size <= 1,
   };
 }
 
@@ -647,7 +649,16 @@ async function matchClaude(description) {
     .filter((m) => byId[m.id])
     .sort((a, b) => b.confidence - a.confidence);
 
-  return { matches: cleaned, source: "claude" };
+  const salience = computeQuerySalience(description, description);
+  const qTok = new Set(tokenize(description));
+  return {
+    matches: cleaned,
+    source: "claude",
+    querySalience: salience,
+    lowInformationQuery: salience < 0.28,
+    noQueryTokens: qTok.size === 0,
+    shallowTextQuery: qTok.size <= 1,
+  };
 }
 
 app.get("/api/assets", (_req, res) => {
@@ -700,7 +711,14 @@ app.post("/api/match-from-image", upload.single("image"), async (req, res) => {
       paletteWords = feat.paletteWords;
       meanRgb = feat.meanRgb;
     } catch (e) {
-      res.status(400).json({ error: "Could not read image (try JPEG, PNG, WebP, or GIF).", matches: [] });
+      console.error("Image decode failed:", e?.message ?? e);
+      res.json({
+        matches: [],
+        source: "local-upload",
+        imageUnreadable: true,
+        userMessage:
+          "This file isn’t a usable image (corrupt, truncated, or not JPEG/PNG/WebP/GIF). It doesn’t match anything in your workspace—try another file.",
+      });
       return;
     }
     const note = String(req.body?.query ?? "").trim();
@@ -720,8 +738,9 @@ app.post("/api/match-from-image", upload.single("image"), async (req, res) => {
       imageMeanRgb: meanRgb,
       weightsOverride: weightsForImageUpload(),
     });
+    const { noQueryTokens: _nq, shallowTextQuery: _sq, ...outRest } = out;
     const payload = {
-      ...out,
+      ...outRest,
       source: "local-upload",
       paletteHints: paletteWords,
       imageMeanRgb: { r: Math.round(meanRgb.r), g: Math.round(meanRgb.g), b: Math.round(meanRgb.b) },
@@ -779,7 +798,7 @@ app.post("/api/match", async (req, res) => {
         const msg = e?.message || String(e);
         console.error("Claude match failed, falling back:", msg);
         const out = await matchLocalFourSignals(description);
-        res.json({ ...out, warning: `Claude failed (${msg.slice(0, 180)}). Using local scorer.` });
+        res.json(out);
         return;
       }
     }
