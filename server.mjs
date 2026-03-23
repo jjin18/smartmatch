@@ -6,6 +6,7 @@ import express from "express";
 import { existsSync, mkdirSync, readFileSync } from "fs";
 import { Jimp, intToRGBA } from "jimp";
 import multer from "multer";
+import sharp from "sharp";
 import { dirname, join, resolve } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { SMART_MATCH_SYSTEM, buildUserPrompt } from "./lib/smartmatch-prompt.mjs";
@@ -17,7 +18,8 @@ dotenv.config({ path: join(__dirname, ".env") });
 const PORT = Number(process.env.PORT) || 3000;
 const DATA_PATH = join(__dirname, "data", "workspace.json");
 const EMBED_MODEL = "Xenova/all-MiniLM-L6-v2";
-const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022";
+/** Override with `ANTHROPIC_MODEL` in `.env` — see https://docs.anthropic.com/en/docs/about-claude/models */
+const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514";
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
 
@@ -76,22 +78,32 @@ function rgbToColorWords(r, g, b) {
 }
 
 /**
- * Sample the upload for palette vocabulary + mean RGB (for thumbnail distance).
- * Words are ranked by pixel frequency so dominant hues matter more than rare outliers.
+ * Accumulate palette words + mean RGB from a small raster (64×64, stride-2 sample).
+ * @param {Buffer} data — raw RGB or RGBA
+ * @param {number} width
+ * @param {number} height
+ * @param {number} channels — 3 or 4
  */
-async function extractImageColorFeatures(buffer) {
-  const image = await Jimp.read(buffer);
-  image.resize({ w: 64, h: 64 });
+function accumulatePaletteFromRaw(data, width, height, channels) {
   const freq = new Map();
   let sr = 0;
   let sg = 0;
   let sb = 0;
   let n = 0;
-  const iw = image.width;
-  const ih = image.height;
-  for (let y = 0; y < ih; y += 2) {
-    for (let x = 0; x < iw; x += 2) {
-      const { r, g, b } = intToRGBA(image.getPixelColor(x, y));
+  for (let y = 0; y < height; y += 2) {
+    for (let x = 0; x < width; x += 2) {
+      let r;
+      let g;
+      let b;
+      if (channels === 1) {
+        const i = y * width + x;
+        r = g = b = data[i];
+      } else {
+        const i = (y * width + x) * channels;
+        r = data[i];
+        g = data[i + 1];
+        b = data[i + 2];
+      }
       sr += r;
       sg += g;
       sb += b;
@@ -107,6 +119,59 @@ async function extractImageColorFeatures(buffer) {
     .slice(0, 24);
   const meanRgb = n ? { r: sr / n, g: sg / n, b: sb / n } : { r: 128, g: 128, b: 128 };
   return { paletteWords, meanRgb };
+}
+
+/**
+ * Sample the upload for palette vocabulary + mean RGB (for thumbnail distance).
+ * Uses **sharp** first (WebP, AVIF, HEIC, JPEG, PNG, GIF, …); Jimp is fallback if sharp fails.
+ */
+async function extractImageColorFeatures(buffer) {
+  if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
+    throw new Error("Empty image buffer");
+  }
+  try {
+    const meta = await sharp(buffer).metadata();
+    let pipeline = sharp(buffer).rotate().resize(64, 64, { fit: "fill" });
+    if (meta.hasAlpha) {
+      pipeline = pipeline.ensureAlpha().flatten({ background: { r: 255, g: 255, b: 255 } });
+    }
+    const { data, info } = await pipeline.raw().toBuffer({ resolveWithObject: true });
+    const ch = info.channels;
+    if (ch !== 1 && ch < 3) throw new Error("Unsupported channel layout");
+    return accumulatePaletteFromRaw(data, info.width, info.height, ch >= 3 ? ch : 1);
+  } catch (sharpErr) {
+    try {
+      const image = await Jimp.read(buffer);
+      image.resize({ w: 64, h: 64 });
+      const freq = new Map();
+      let sr = 0;
+      let sg = 0;
+      let sb = 0;
+      let n = 0;
+      const iw = image.width;
+      const ih = image.height;
+      for (let y = 0; y < ih; y += 2) {
+        for (let x = 0; x < iw; x += 2) {
+          const { r, g, b } = intToRGBA(image.getPixelColor(x, y));
+          sr += r;
+          sg += g;
+          sb += b;
+          n++;
+          for (const w of rgbToColorWords(r, g, b)) {
+            freq.set(w, (freq.get(w) || 0) + 1);
+          }
+        }
+      }
+      const paletteWords = [...freq.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([w]) => w)
+        .slice(0, 24);
+      const meanRgb = n ? { r: sr / n, g: sg / n, b: sb / n } : { r: 128, g: 128, b: 128 };
+      return { paletteWords, meanRgb };
+    } catch {
+      throw sharpErr;
+    }
+  }
 }
 
 /** Max RGB Euclidean distance (black vs white corner). */
@@ -694,10 +759,28 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
-app.post("/api/match-from-image", upload.single("image"), async (req, res) => {
+function uploadImageSingle(req, res, next) {
+  upload.single("image")(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        res.status(400).json({ error: "Image too large (max 8 MB).", matches: [] });
+        return;
+      }
+      res.status(400).json({ error: err.message || "Upload failed", matches: [] });
+      return;
+    }
+    if (err) {
+      res.status(400).json({ error: err.message || "Upload failed", matches: [] });
+      return;
+    }
+    next();
+  });
+}
+
+app.post("/api/match-from-image", uploadImageSingle, async (req, res) => {
   try {
     if (!req.file?.buffer) {
-      res.status(400).json({ error: "No image file", matches: [] });
+      res.status(400).json({ error: "No image file — use field name “image”.", matches: [] });
       return;
     }
     if (!assets.length) {

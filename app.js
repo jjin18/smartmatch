@@ -1353,7 +1353,8 @@ async function matchWithApi(query) {
  */
 async function matchWithImageApi(file, queryExtra) {
   const fd = new FormData();
-  fd.append("image", file, file.name);
+  const fname = file.name || "upload.png";
+  fd.append("image", file, fname);
   if (queryExtra) fd.append("query", queryExtra);
   const res = await fetch("/api/match-from-image", { method: "POST", body: fd });
   const body = await res.json().catch(() => ({}));

@@ -17,7 +17,7 @@ Create a `.env` file in the project root (optional but recommended for Claude-po
 
 ```env
 ANTHROPIC_API_KEY=your_key_here
-ANTHROPIC_MODEL=claude-3-5-haiku-20241022
+ANTHROPIC_MODEL=claude-sonnet-4-20250514
 PORT=3000
 ```
 
