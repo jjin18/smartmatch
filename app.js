@@ -4,7 +4,6 @@ const scanBtn = document.getElementById("scan-btn");
 const scanHint = document.getElementById("scan-hint");
 const matchSection = document.getElementById("match-section");
 const toast = document.getElementById("toast");
-const sidebarCreate = document.getElementById("sidebar-create");
 const envHint = document.getElementById("env-hint");
 const recentList = document.getElementById("recent-list");
 const recentsGrid = document.getElementById("recents-grid");
@@ -820,12 +819,6 @@ function setHomeView(tab) {
     clearRecentsFilters();
   }
 
-  document.querySelectorAll("[data-home-tab]").forEach((btn) => {
-    const active = btn.getAttribute("data-home-tab") === tab;
-    btn.classList.toggle("is-active", active);
-    btn.setAttribute("aria-selected", active ? "true" : "false");
-  });
-
   document.querySelectorAll("[data-nav-tab]").forEach((btn) => {
     const navTab = btn.getAttribute("data-nav-tab");
     const isProjects = btn.getAttribute("data-nav-projects") === "true";
@@ -901,11 +894,6 @@ function maybeShowSmartMatchAlert(result, sourceAsset) {
   lastGlobalSmartAlertAt = Date.now();
   openSmartMatchAlert(top, source);
 }
-
-sidebarCreate?.addEventListener("click", () => {
-  document.getElementById("flow")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  description?.focus();
-});
 
 globalSearch?.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
@@ -1202,22 +1190,11 @@ document.addEventListener("keydown", (e) => {
   if (matchModal && !matchModal.hidden) closeMatchModal();
 });
 
-document.querySelectorAll("[data-home-tab]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const tab = btn.getAttribute("data-home-tab");
-    if (tab) setHomeView(tab);
-  });
-});
-
 document.querySelectorAll("[data-nav-tab]").forEach((btn) => {
   btn.addEventListener("click", () => {
     const tab = btn.getAttribute("data-nav-tab");
     if (tab) setHomeView(tab);
   });
-});
-
-document.getElementById("nav-rail-home")?.addEventListener("click", () => {
-  setHomeView("designs");
 });
 
 function goToSmartMatchEntry() {
